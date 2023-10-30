@@ -1,0 +1,307 @@
+{% extends "public.html" %} {% block page %}
+<div class="row q-col-gutter-md justify-center">
+  <div class="col-12 col-lg-8">
+    <q-card class="q-pa-lg">
+      <q-card-section class="q-pa-none">
+        <h4 class="q-mt-none q-mb-md">${schedule.name}</h4>
+      </q-card-section>
+      <q-separator></q-separator>
+      <div class="row q-mt-md">
+        <q-card-section class="col-12 col-md-5">
+          <div class="text-h6 q-mb-sm">Information</div>
+          <div class="q-mb-sm">
+            <q-input
+              v-model.trim="formDialog.data.name"
+              type="name"
+              label="Your name "
+              :borderless="formDialog.data.name != ''"
+            ></q-input>
+            <q-input
+              class="q-mb-lg"
+              v-model.trim="formDialog.data.email"
+              type="email"
+              label="Your email (optional, if you want a reply)"
+              :borderless="formDialog.data.email != ''"
+            ></q-input>
+            <q-input
+              v-model.trim="formDialog.data.text"
+              type="textarea"
+              label="Write a message (optional)"
+              :borderless="formDialog.data.text != ''"
+            ></q-input>
+          </div>
+        </q-card-section>
+        <q-card-section class="col-12 col-sm-7 col-md-4">
+          <div class="text-h6 q-mb-sm">Select date</div>
+          <q-date
+            v-model="date"
+            :options="availableDaysFn"
+            class="full-width"
+          ></q-date>
+        </q-card-section>
+        <q-card-section class="col-12 col-sm-5 col-md-3">
+          <div class="text-h6 q-mb-sm">Select time</div>
+          <template>
+            <div
+              class="column items-center no-wrap"
+              style="max-height: 60vh; overflow: auto"
+            >
+              <q-btn-dropdown
+                v-for="(slot, i) in timeSlots"
+                :key="i"
+                class="q-mb-sm"
+                :disable="timePassedFn(slot)"
+                :outline="timeSlot != slot"
+                :color="timeSlot != slot ? 'grey' : 'primary'"
+                :label="slot"
+                menu-anchor="bottom middle"
+              >
+                <q-list>
+                  <q-item
+                    clickable
+                    v-close-popup
+                    @click="bookAppointment(slot)"
+                  >
+                    <q-item-section>
+                      <q-item-label>Confirm</q-item-label>
+                    </q-item-section>
+                  </q-item>
+
+                  <q-item clickable v-close-popup @click="timeSlot = null">
+                    <q-item-section>
+                      <q-item-label>Cancel</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </div>
+          </template>
+        </q-card-section>
+      </div>
+      <q-card-section>${appointmentDate}</q-card-section>
+      <q-card-section class="row items-end q-mt-lg">
+        <q-btn
+          unelevated
+          color="primary"
+          class="q-mr-md"
+          @click="createAppointment"
+          >Submit</q-btn
+        >
+        <q-btn flat color="grey" @click="resetData">Reset</q-btn>
+      </q-card-section>
+    </q-card>
+  </div>
+  <q-dialog v-model="paymentDialog.show" position="top">
+    <q-card
+      v-if="!paymentDialog.paymentRequest"
+      class="q-pa-lg q-pt-xl lnbits__dialog-card"
+    >
+    </q-card>
+    <q-card v-else class="q-pa-lg q-pt-xl lnbits__dialog-card">
+      <div class="text-center q-mb-lg">
+        <a
+          class="text-secondary"
+          :href="'lightning:' + paymentDialog.paymentRequest"
+        >
+          <q-responsive :ratio="1" class="q-mx-xl">
+            <lnbits-qrcode
+              :value="'lightning:' + paymentDialog.paymentRequest.toUpperCase()"
+            ></lnbits-qrcode>
+          </q-responsive>
+        </a>
+      </div>
+      <div class="row q-mt-lg">
+        <q-btn
+          outline
+          color="grey"
+          @click="copyText(paymentDialog.paymentRequest)"
+          >Copy invoice</q-btn
+        >
+        <q-btn v-close-popup flat color="grey" class="q-ml-auto">Close</q-btn>
+      </div>
+    </q-card>
+  </q-dialog>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  Vue.component(VueQrcode.name, VueQrcode)
+
+  new Vue({
+    el: '#vue',
+    mixins: [windowMixin],
+    delimiters: ['${', '}'],
+    data: function () {
+      return {
+        date: null,
+        timeSlot: null,
+        formDialog: {
+          data: {
+            name: '',
+            email: '',
+            text: ''
+          }
+        },
+        paymentDialog: {
+          show: false,
+          paymentRequest: null,
+          paymentHash: null,
+          dismissMsg: () => {},
+          paymentChecker: null
+        }
+      }
+    },
+    computed: {
+      timeSlots() {
+        const [startHour, startMinute] = this.schedule.start_time
+          .split(':')
+          .map(Number)
+        const [endHour, endMinute] = this.schedule.end_time
+          .split(':')
+          .map(Number)
+        const slots = []
+
+        for (
+          let time = startHour * 60 + startMinute;
+          time <= endHour * 60 + endMinute;
+          time += 30
+        ) {
+          const hour = Math.floor(time / 60)
+          const minute = time % 60
+          slots.push(
+            `${String(hour).padStart(2, '0')}:${String(minute).padStart(
+              2,
+              '0'
+            )}`
+          )
+        }
+
+        return slots
+      },
+      appointmentDate() {
+        if (!this.date || !this.timeSlot) return ''
+        let formattedDate = Quasar.utils.date.formatDate(
+          new Date(this.date),
+          'ddd, Do MMM, YYYY'
+        )
+        return `Appointment at ${this.timeSlot} on ${formattedDate}`
+      },
+      timePassed() {
+        return new Date(this.date).valueOf() != this.today.valueOf()
+      }
+    },
+    methods: {
+      availableDaysFn(date) {
+        if (new Date(date) < this.today) return false
+        let weekday = new Date(date).getDay() - 1
+        return this.availableDays.some(d => d === weekday)
+      },
+      bookAppointment(time) {
+        this.timeSlot = time
+        console.log(this.timeSlot)
+        return
+      },
+      timePassedFn(time) {
+        if (this.timePassed) return false
+        const [hour, minute] = time.split(':').map(Number)
+        const now = new Date()
+        return (
+          now.getHours() > hour ||
+          (now.getHours() === hour && now.getMinutes() > minute)
+        )
+      },
+      add30min(time) {
+        const [hours, minutes] = time.split(':').map(Number)
+        let newHours = hours
+        let newMinutes = minutes + 30
+
+        if (newMinutes >= 60) {
+          newHours = (newHours + 1) % 24 // To handle the case where hours can go over 24
+          newMinutes -= 60
+        }
+
+        const newTime = `${String(newHours).padStart(2, '0')}:${String(
+          newMinutes
+        ).padStart(2, '0')}`
+        return newTime
+      },
+      createAppointment() {
+        LNbits.api
+          .request('POST', '/lncalendar/api/v1/appointment', null, {
+            name: this.formDialog.data.name,
+            email: this.formDialog.data.email,
+            info: this.formDialog.data.text,
+            start_time: `${this.date} ${this.timeSlot}`,
+            end_time: `${this.date} ${this.add30min(this.timeSlot)}`,
+            schedule: this.schedule.id
+          })
+          .then(response => {
+            this.paymentDialog.paymentRequest = response.data.payment_request
+            this.paymentDialog.paymentHash = response.data.payment_hash
+            this.openPaymentDialog()
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      },
+      openPaymentDialog() {
+        this.paymentDialog.show = true
+        this.formDialog.dismissMsg = this.$q.notify({
+          timeout: 0,
+          message: 'Waiting for payment...'
+        })
+        console.log(this.paymentDialog)
+        this.paymentDialog.paymentChecker = setInterval(() => {
+          LNbits.api
+            .request(
+              'GET',
+              `/lncalendar/api/v1/appointment/${this.schedule.id}/${this.paymentDialog.paymentHash}`
+            )
+            .then(response => {
+              if (response.data.paid) {
+                this.closePaymentDialog()
+              }
+            })
+            .catch(error => {
+              LNbits.utils.notifyApiError(error)
+            })
+        }, 3000)
+      },
+      closePaymentDialog() {
+        clearInterval(this.paymentDialog.paymentChecker)
+        this.formDialog.dismissMsg()
+        this.resetPaymentDialog()
+        this.resetData()
+        this.$q.notify({
+          type: 'positive',
+          message: 'Sats received, thanks!',
+          icon: 'thumb_up'
+        })
+      },
+      resetData() {
+        this.formDialog.data.name = ''
+        this.formDialog.data.email = ''
+        this.formDialog.data.text = ''
+        this.date = Quasar.utils.date.formatDate(Date.now(), 'YYYY/MM/DD')
+        this.timeSlot = null
+      },
+      resetPaymentDialog() {
+        this.paymentDialog = {
+          show: false,
+          paymentRequest: null,
+          paymentHash: null,
+          dismissMsg: () => {},
+          paymentChecker: null
+        }
+      }
+    },
+    created() {
+      this.schedule = JSON.parse('{{ schedule | tojson}}')
+      this.date = Quasar.utils.date.formatDate(Date.now(), 'YYYY/MM/DD')
+      this.availableDays = JSON.parse('{{ available_days | tojson}}')
+      this.today = new Date(this.date)
+
+      console.log(this.add30min('16:30'))
+    }
+  })
+</script>
+{% endblock %}

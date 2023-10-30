@@ -1,0 +1,7 @@
+{
+  "name": "LNCalendar",
+  "short_description": "A paid scheduling extension",
+  "tile": "/lncalendar/static/image/paywall.png",
+  "contributors": ["talvasconcelos"],
+  "min_lnbits_version": "0.11.0"
+}
