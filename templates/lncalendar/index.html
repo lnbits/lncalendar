@@ -32,14 +32,26 @@
           <template v-slot:header="props">
             <q-tr :props="props">
               <q-th auto-width></q-th>
+              <q-th auto-width></q-th>
               <q-th v-for="col in props.cols" :key="col.name" :props="props">
                 {{ col.label }}
               </q-th>
+              <q-th auto-width></q-th>
               <q-th auto-width></q-th>
             </q-tr>
           </template>
           <template v-slot:body="props">
             <q-tr :props="props">
+              <q-td auto-width>
+                <q-btn
+                  size="sm"
+                  color="accent"
+                  round
+                  dense
+                  @click="scheduleDialogFn(props.row)"
+                  icon="settings_applications"
+                />
+              </q-td>
               <q-td auto-width>
                 <q-btn
                   unelevated
@@ -60,10 +72,77 @@
                   flat
                   dense
                   size="xs"
+                  @click="updateDialog(props.row.id)"
+                  icon="edit"
+                  color="cyan"
+                ></q-btn>
+              </q-td>
+              <q-td auto-width>
+                <q-btn
+                  flat
+                  dense
+                  size="xs"
                   @click="deleteSchedule(props.row.id)"
                   icon="cancel"
                   color="pink"
                 ></q-btn>
+              </q-td>
+            </q-tr>
+          </template>
+          {% endraw %}
+        </q-table>
+      </q-card-section>
+    </q-card>
+    <q-card>
+      <q-card-section>
+        <div class="row items-center no-wrap q-mb-md">
+          <div class="col">
+            <h5 class="text-subtitle1 q-my-none">Appointments</h5>
+          </div>
+        </div>
+      </q-card-section>
+      <q-card-section>
+        <q-table
+          dense
+          flat
+          :data="appointments"
+          row-key="id"
+          :columns="appointmentsTable.columns"
+          :pagination.sync="appointmentsTable.pagination"
+        >
+          {% raw %}
+          <template v-slot:header="props">
+            <q-tr :props="props">
+              <q-th auto-width></q-th>
+              <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                {{ col.label }}
+              </q-th>
+            </q-tr>
+          </template>
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td auto-width>
+                <q-btn
+                  size="sm"
+                  color="accent"
+                  round
+                  dense
+                  @click="props.expand = !props.expand"
+                  :icon="props.expand ? 'remove' : 'add'"
+                />
+              </q-td>
+              <q-td v-for="col in props.cols" :key="col.name" :props="props">
+                {{ col.value }}
+              </q-td>
+            </q-tr>
+            <q-tr v-show="props.expand" :props="props">
+              <q-td colspan="100%">
+                <div v-if="props.row.email" class="text-left">
+                  Email: {{ props.row.email }}
+                </div>
+                <div v-if="props.row.info" class="text-left">
+                  Subject: {{ props.row.info }}
+                </div>
               </q-td>
             </q-tr>
           </template>
@@ -106,9 +185,10 @@
           type="text"
           label="My availabitlity *"
         ></q-input>
-        <div class="row q-col-gutter-md q-pa-md">
+
+        <div class="row">
           <q-select
-            class="col-12 col-sm-6"
+            class="col-12 col-sm-6 q-pr-sm"
             filled
             dense
             map-options
@@ -118,14 +198,28 @@
             label="Weekday start *"
           >
           </q-select>
-          <q-input
+          <q-select
             class="col-12 col-sm-6"
+            filled
+            dense
+            map-options
+            emit-value
+            v-model="formDialog.data.end_day"
+            :options="weekdays"
+            label="Weekday end *"
+          >
+          </q-select>
+        </div>
+
+        <div class="row">
+          <q-input
+            class="col-12 col-sm-6 q-pr-sm"
             filled
             dense
             v-model="formDialog.data.start_time"
             type="time"
             label="Time start *"
-            ><template v-slot:append>
+            ><template v-slot:after>
               <q-icon round dense flat name="schedule" class="cursor-pointer"
                 ><q-popup-proxy transition-show="scale" transition-hide="scale">
                   <q-time v-model="formDialog.data.start_time" format24h>
@@ -146,19 +240,6 @@
                   </q-time> </q-popup-proxy
               ></q-icon> </template
           ></q-input>
-        </div>
-        <div class="row q-col-gutter-md q-pa-md">
-          <q-select
-            class="col-12 col-sm-6"
-            filled
-            dense
-            map-options
-            emit-value
-            v-model="formDialog.data.end_day"
-            :options="weekdays"
-            label="Weekday end *"
-          >
-          </q-select>
           <q-input
             class="col-12 col-sm-6"
             filled
@@ -211,16 +292,28 @@
       </q-form>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="scheduleDialog.show" persistent>
+    <schedule-details
+      :schedule="scheduleDialog.data"
+      :appointments="appointments.filter(a => a.schedule == scheduleDialog.data.id)"
+      :wallet="g.user.wallets[0]"
+    ></schedule-details>
+  </q-dialog>
 </div>
 {% endblock %} {% block scripts %} {{ window_vars(user) }}
+<script src="{{ url_for('lncalendar_static', path='components/schedule-details/schedule-details.js') }}"></script>
 <script>
-  var mapSchedule = function (obj) {
-    // obj.date = Quasar.utils.date.formatDate(
-    //   new Date(obj.time * 1000),
-    //   'YYYY-MM-DD HH:mm'
-    // )
-    // obj.fsat = new Intl.NumberFormat(LOCALE).format(obj.amount)
-    // obj.displayUrl = ['/paywall/', obj.id].join('')
+  scheduleDetails('static/components/schedule-details/schedule-details.html')
+
+  const mapSchedule = function (obj) {
+    obj.displayUrl = `/lncalendar/${obj.id}`
+    return obj
+  }
+
+  const mapAppointment = obj => {
+    let [date, time] = obj.start_time.split(' ')
+    obj.date = Quasar.utils.date.formatDate(date, 'YYYY-MM-DD')
+    obj.time = time
     return obj
   }
 
@@ -238,7 +331,7 @@
               name: 'amount',
               align: 'right',
               label: 'Amount (sat)',
-              field: 'fsat',
+              field: 'amount',
               sortable: true,
               sort: function (a, b, rowA, rowB) {
                 return rowA.amount - rowB.amount
@@ -269,6 +362,40 @@
             rowsPerPage: 10
           }
         },
+        appointments: [],
+        appointmentsTable: {
+          columns: [
+            {
+              name: 'id',
+              align: 'left',
+              label: 'ID',
+              field: 'id'
+            },
+            {
+              name: 'name',
+              align: 'left',
+              label: 'Name',
+              field: 'name'
+            },
+            {
+              name: 'date',
+              align: 'left',
+              label: 'Date',
+              field: 'date'
+            },
+            {
+              name: 'time',
+              align: 'left',
+              label: 'Time',
+              field: 'time'
+            }
+          ],
+          pagination: {
+            rowsPerPage: 10
+          }
+        },
+        unavailableDatesSet: null,
+        unavailableDates: [],
         weekdays: [
           {label: 'Monday', value: 0},
           {label: 'Tuesday', value: 1},
@@ -282,6 +409,10 @@
           show: false,
           show_start_time: false,
           show_end_time: false,
+          data: {}
+        },
+        scheduleDialog: {
+          show: false,
           data: {}
         }
       }
@@ -318,7 +449,7 @@
             wallet.adminkey,
             data
           )
-          this.paywalls.push(mapSchedule(response.data))
+          this.schedules.push(mapSchedule(response.data))
           this.$q.notify({
             type: 'positive',
             message: 'New schedule created',
@@ -328,6 +459,12 @@
           console.warn(error)
           LNbits.utils.notifyApiError(error)
         }
+      },
+      updateDialog(scheduleId) {
+        this.formDialog.data = this.schedules.find(
+          schedule => schedule.id == scheduleId
+        )
+        this.formDialog.show = true
       },
       async updateSchedule(wallet, data) {
         try {
@@ -370,11 +507,36 @@
                 message: 'Schedule Deleted',
                 timeout: 5000
               })
+              this.schedules = this.schedules.filter(
+                schedule => schedule.id !== scheduleId
+              )
             } catch (error) {
               console.warn(error)
               LNbits.utils.notifyApiError(error)
             }
           })
+      },
+      scheduleDialogFn(schedule) {
+        if (this.scheduleDialog.show == true) {
+          this.scheduleDialog.show = false
+          this.scheduleDialog.data = {}
+        } else {
+          this.scheduleDialog.show = true
+          this.scheduleDialog.data = schedule
+        }
+      },
+      async getAppointments() {
+        try {
+          let appointments = await LNbits.api.request(
+            'GET',
+            '/lncalendar/api/v1/appointment',
+            this.g.user.wallets[0].inkey
+          )
+          this.appointments = appointments.data.map(mapAppointment)
+        } catch (error) {
+          console.warn(error)
+          LNbits.utils.notifyApiError(error)
+        }
       },
       exportCSV() {
         LNbits.utils.exportCSV(this.schedulesTable.columns, this.schedules)
@@ -383,6 +545,7 @@
     created() {
       if (this.g.user.wallets.length) {
         this.getSchedules()
+        this.getAppointments()
       }
     }
   })

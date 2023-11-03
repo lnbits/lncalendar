@@ -20,6 +20,9 @@ from .crud import (
     update_schedule,
     create_appointment,
     set_appointment_paid,
+    get_appointments_wallets,
+    create_unavailable_time,
+    get_unavailable_times,
 )
 from .models import Schedule, CreateSchedule, CreateUnavailableTime, CreateAppointment
 
@@ -36,7 +39,10 @@ async def api_schedules(
         user = await get_user(wallet.wallet.user)
         wallet_ids = user.wallet_ids if user else []
 
-    return [schedule.dict() for schedule in await get_schedules(wallet_ids)]
+    return [
+        {**schedule.dict(), "available_days": schedule.availabe_days}
+        for schedule in await get_schedules(wallet_ids)
+    ]
 
 
 @lncalendar_ext.post("/api/v1/schedule")
@@ -66,7 +72,7 @@ async def api_schedule_update(
         )
 
     schedule = await update_schedule(schedule_id, data)
-    return schedule.dict()
+    return {**schedule.dict(), "available_days": schedule.availabe_days}
 
 
 @lncalendar_ext.delete("/api/v1/schedule/{schedule_id}")
@@ -131,3 +137,41 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
         return {"paid": True}
 
     return {"paid": False}
+
+
+@lncalendar_ext.get("/api/v1/appointment")
+async def api_get_all_appointments(
+    wallet: WalletTypeInfo = Depends(require_invoice_key),
+):
+    user = await get_user(wallet.wallet.user)
+    wallet_ids = user.wallet_ids if user else []
+    return await get_appointments_wallets(wallet_ids)
+
+
+## Unavailable Time API
+@lncalendar_ext.post("/api/v1/unavailable")
+async def api_unavailable_create(
+    data: CreateUnavailableTime, wallet: WalletTypeInfo = Depends(require_admin_key)
+):
+    schedule = await get_schedule(data.schedule)
+    if not schedule:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
+        )
+    if schedule.wallet != wallet.wallet.id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
+        )
+    unavailable = await create_unavailable_time(data=data)
+    assert unavailable, "Newly created unavailable time couldn't be retrieved"
+    return unavailable
+
+
+@lncalendar_ext.get("/api/v1/unavailable/{schedule_id}")
+async def api_unavailable_get(schedule_id: str):
+    schedule = await get_schedule(schedule_id)
+    if not schedule:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
+        )
+    return await get_unavailable_times(schedule_id)
