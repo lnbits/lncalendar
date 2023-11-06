@@ -231,7 +231,7 @@
             ])
           })
           .catch(err => {
-            console.log(err)
+            console.error(err)
           })
       },
       async getAppointments() {
@@ -262,7 +262,7 @@
             this.openPaymentDialog()
           })
           .catch(error => {
-            console.log(error)
+            LNbits.utils.notifyApiError(error)
           })
       },
       openPaymentDialog() {
@@ -271,16 +271,16 @@
           timeout: 0,
           message: 'Waiting for payment...'
         })
-        console.log(this.paymentDialog)
         this.paymentDialog.paymentChecker = setInterval(() => {
           LNbits.api
             .request(
               'GET',
               `/lncalendar/api/v1/appointment/${this.schedule.id}/${this.paymentDialog.paymentHash}`
             )
-            .then(response => {
+            .then(async response => {
               if (response.data.paid) {
                 this.closePaymentDialog()
+                await this.getAppointments()
               }
             })
             .catch(error => {
@@ -288,7 +288,7 @@
             })
         }, 3000)
       },
-      closePaymentDialog() {
+      async closePaymentDialog() {
         clearInterval(this.paymentDialog.paymentChecker)
         this.formDialog.dismissMsg()
         this.resetPaymentDialog()

@@ -419,7 +419,6 @@
       sendFormData() {
         const data = {...this.formDialog.data}
         const wallet = _.findWhere(this.g.user.wallets, {id: data.wallet})
-        console.log(data)
         if (data.id) {
           this.updateSchedule(wallet, data)
         } else {

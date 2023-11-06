@@ -52,7 +52,6 @@ const timeFormat = eventInfo => {
   )
   let m = moment(eventInfo.start_time, 'YYYY/MM/DD HH:mm')
   let isPass = m.isBefore(moment())
-  console.log(time)
   return {
     date: formattedDate,
     time: time,
