@@ -12,34 +12,39 @@ async function scheduleDetails(path) {
         dateRange: null,
         events: [],
         splitterModel: 60,
-        eventInfo: null,
+        eventsByDate: [],
         unavailableDates: new Set()
       }
     },
 
-    computed: {
-      timeFormatted() {
-        if (!this.eventInfo) return null
-        let [date, time] = this.eventInfo.start_time.split(' ')
+    computed: {},
+
+    methods: {
+      timeFormatted(eventInfo) {
+        if (!eventInfo) return null
+        let [date, time] = eventInfo.start_time.split(' ')
         let formattedDate = Quasar.utils.date.formatDate(
           new Date(date),
           'ddd, Do MMM, YYYY'
         )
-        let m = moment(this.eventInfo.start_time, 'YYYY/MM/DD HH:mm')
+        let m = moment(eventInfo.start_time, 'YYYY/MM/DD HH:mm')
         let isPass = m.isBefore(moment())
+        console.log(time)
         return {
           date: formattedDate,
-          time: time,
-          fromNow: `${isPass ? 'Started' : 'Starts'} ${m.fromNow()}`
+          time: moment(time, 'HH:mm').format('hh:mm'),
+          fromNow: `${isPass ? '' : 'Starts'} ${m.fromNow()}`
         }
-      }
-    },
-
-    methods: {
+      },
       dateChanged(val) {
-        this.eventInfo = this.appointments.find(appointment => {
-          return appointment.start_time.split(' ')[0] == val
-        })
+        this.eventsByDate = this.appointments
+          .filter(appointment => {
+            return appointment.start_time.split(' ')[0] == val
+          })
+          .sort((a, b) => {
+            return moment(a.time, 'HH:mm') - moment(b.time, 'HH:mm')
+          })
+        console.log(this.eventsByDate)
       },
       availableDaysFn(date) {
         if (new Date(date) < this.today) return false

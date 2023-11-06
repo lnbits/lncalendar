@@ -194,6 +194,7 @@
     },
     methods: {
       availableDaysFn(date) {
+        if (this.unavailableDatesFn(date)) return false
         if (new Date(date) < this.today) return false
         let weekday = new Date(date).getDay() - 1
         return this.availableDays.some(d => d === weekday)
@@ -252,7 +253,7 @@
             email: this.formDialog.data.email,
             info: this.formDialog.data.text,
             start_time: `${this.date} ${this.timeSlot}`,
-            end_time: `${this.date} ${this.add30min(this.timeSlot)}`,
+            end_time: `${this.date} ${add30min(this.timeSlot)}`,
             schedule: this.schedule.id
           })
           .then(response => {
@@ -321,6 +322,7 @@
       this.availableDays = JSON.parse('{{ available_days | tojson}}')
       this.today = new Date(this.date)
       await this.getAppointments()
+      this.getUnavailableDates()
     }
   })
 </script>

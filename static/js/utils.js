@@ -43,6 +43,23 @@ const add30min = time => {
   return newTime
 }
 
+const timeFormat = eventInfo => {
+  if (!eventInfo) return null
+  let [date, time] = eventInfo.start_time.split(' ')
+  let formattedDate = Quasar.utils.date.formatDate(
+    new Date(date),
+    'ddd, Do MMM, YYYY'
+  )
+  let m = moment(eventInfo.start_time, 'YYYY/MM/DD HH:mm')
+  let isPass = m.isBefore(moment())
+  console.log(time)
+  return {
+    date: formattedDate,
+    time: time,
+    fromNow: `${isPass ? '' : 'Starts'} ${m.fromNow()}`
+  }
+}
+
 function loadTemplateAsync(path) {
   const result = new Promise(resolve => {
     const xhttp = new XMLHttpRequest()
