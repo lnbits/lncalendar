@@ -301,21 +301,10 @@
   </q-dialog>
 </div>
 {% endblock %} {% block scripts %} {{ window_vars(user) }}
+<script src="{{ url_for('lncalendar_static', path='js/utils.js') }}"></script>
 <script src="{{ url_for('lncalendar_static', path='components/schedule-details/schedule-details.js') }}"></script>
 <script>
   scheduleDetails('static/components/schedule-details/schedule-details.html')
-
-  const mapSchedule = function (obj) {
-    obj.displayUrl = `/lncalendar/${obj.id}`
-    return obj
-  }
-
-  const mapAppointment = obj => {
-    let [date, time] = obj.start_time.split(' ')
-    obj.date = Quasar.utils.date.formatDate(date, 'YYYY-MM-DD')
-    obj.time = time
-    return obj
-  }
 
   new Vue({
     el: '#vue',
@@ -394,8 +383,6 @@
             rowsPerPage: 10
           }
         },
-        unavailableDatesSet: null,
-        unavailableDates: [],
         weekdays: [
           {label: 'Monday', value: 0},
           {label: 'Tuesday', value: 1},

@@ -20,6 +20,7 @@ from .crud import (
     update_schedule,
     create_appointment,
     set_appointment_paid,
+    get_appointments,
     get_appointments_wallets,
     create_unavailable_time,
     get_unavailable_times,
@@ -137,6 +138,13 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
         return {"paid": True}
 
     return {"paid": False}
+
+
+@lncalendar_ext.get("/api/v1/appointment/{schedule_id}")
+async def api_get_appointments_schedule(schedule_id: str):
+    appointments = await get_appointments(schedule_id)
+    assert appointments, "Appointments couldn't be retrieved"
+    return appointments
 
 
 @lncalendar_ext.get("/api/v1/appointment")

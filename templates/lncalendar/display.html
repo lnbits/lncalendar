@@ -123,6 +123,7 @@
   </q-dialog>
 </div>
 {% endblock %} {% block scripts %}
+<script src="{{ url_for('lncalendar_static', path='js/utils.js') }}"></script>
 <script>
   Vue.component(VueQrcode.name, VueQrcode)
 
@@ -134,6 +135,8 @@
       return {
         date: null,
         timeSlot: null,
+        appointments: [],
+        unavailableDates: new Set(),
         formDialog: {
           data: {
             name: '',
@@ -197,10 +200,15 @@
       },
       bookAppointment(time) {
         this.timeSlot = time
-        console.log(this.timeSlot)
         return
       },
+      isBooked(time) {
+        return this.appointments.some(
+          appointment => appointment.start_time.split(' ')[1] === time
+        )
+      },
       timePassedFn(time) {
+        if (this.isBooked(time)) return true
         if (this.timePassed) return false
         const [hour, minute] = time.split(':').map(Number)
         const now = new Date()
@@ -209,20 +217,33 @@
           (now.getHours() === hour && now.getMinutes() > minute)
         )
       },
-      add30min(time) {
-        const [hours, minutes] = time.split(':').map(Number)
-        let newHours = hours
-        let newMinutes = minutes + 30
-
-        if (newMinutes >= 60) {
-          newHours = (newHours + 1) % 24 // To handle the case where hours can go over 24
-          newMinutes -= 60
+      unavailableDatesFn(date) {
+        return this.unavailableDates.has(date)
+      },
+      getUnavailableDates() {
+        LNbits.api
+          .request('GET', `/lncalendar/api/v1/unavailable/${this.schedule.id}`)
+          .then(res => {
+            this.unavailableDates = new Set([
+              ...this.unavailableDates,
+              ...extractUnavailableDates(res.data)
+            ])
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      },
+      async getAppointments() {
+        try {
+          let appointments = await LNbits.api.request(
+            'GET',
+            `/lncalendar/api/v1/appointment/${this.schedule.id}`
+          )
+          this.appointments = appointments.data.map(mapAppointment)
+        } catch (error) {
+          console.warn(error)
+          LNbits.utils.notifyApiError(error)
         }
-
-        const newTime = `${String(newHours).padStart(2, '0')}:${String(
-          newMinutes
-        ).padStart(2, '0')}`
-        return newTime
       },
       createAppointment() {
         LNbits.api
@@ -294,13 +315,12 @@
         }
       }
     },
-    created() {
+    async created() {
       this.schedule = JSON.parse('{{ schedule | tojson}}')
       this.date = Quasar.utils.date.formatDate(Date.now(), 'YYYY/MM/DD')
       this.availableDays = JSON.parse('{{ available_days | tojson}}')
       this.today = new Date(this.date)
-
-      console.log(this.add30min('16:30'))
+      await this.getAppointments()
     }
   })
 </script>

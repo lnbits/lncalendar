@@ -56,20 +56,10 @@ async function scheduleDetails(path) {
         LNbits.api
           .request('GET', `/lncalendar/api/v1/unavailable/${this.schedule.id}`)
           .then(res => {
-            res.data.forEach(obj => {
-              const startDate = new Date(obj.start_time)
-              const endDate = new Date(obj.end_time)
-
-              for (
-                let date = new Date(startDate);
-                date <= endDate;
-                date.setDate(date.getDate() + 1)
-              ) {
-                this.unavailableDates.add(
-                  Quasar.utils.date.formatDate(date, 'YYYY/MM/DD')
-                )
-              }
-            })
+            this.unavailableDates = new Set([
+              ...this.unavailableDates,
+              ...extractUnavailableDates(res.data)
+            ])
           })
           .catch(err => {
             console.log(err)
@@ -111,23 +101,4 @@ async function scheduleDetails(path) {
       this.availableDays = this.schedule.available_days
     }
   })
-}
-
-function loadTemplateAsync(path) {
-  const result = new Promise(resolve => {
-    const xhttp = new XMLHttpRequest()
-
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4) {
-        if (this.status == 200) resolve(this.responseText)
-
-        if (this.status == 404) resolve(`<div>Page not found: ${path}</div>`)
-      }
-    }
-
-    xhttp.open('GET', path, true)
-    xhttp.send()
-  })
-
-  return result
 }
