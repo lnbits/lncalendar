@@ -429,7 +429,7 @@
       },
       async createSchedule(wallet, data) {
         try {
-          await LNbits.api.request(
+          let response = await LNbits.api.request(
             'POST',
             '/lncalendar/api/v1/schedule',
             wallet.adminkey,
@@ -454,7 +454,7 @@
       },
       async updateSchedule(wallet, data) {
         try {
-          await LNbits.api.request(
+          let response = await LNbits.api.request(
             'PUT',
             '/lncalendar/api/v1/schedule/' + data.id,
             wallet.inkey,

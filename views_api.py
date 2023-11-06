@@ -143,7 +143,9 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
 @lncalendar_ext.get("/api/v1/appointment/{schedule_id}")
 async def api_get_appointments_schedule(schedule_id: str):
     appointments = await get_appointments(schedule_id)
-    assert appointments, "Appointments couldn't be retrieved"
+
+    if not appointments:
+        return []
     return appointments
 
 

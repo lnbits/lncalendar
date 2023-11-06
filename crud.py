@@ -114,6 +114,7 @@ async def get_appointment(appointment_id: str) -> Optional[Appointment]:
 
 
 async def get_appointments(schedule_id: str) -> List[Appointment]:
+    print(schedule_id)
     rows = await db.fetchall(
         "SELECT * FROM lncalendar.appointment WHERE schedule = ?", (schedule_id,)
     )
@@ -127,7 +128,9 @@ async def get_appointments_wallets(
         wallet_ids = [wallet_ids]
 
     schedules = await get_schedules(wallet_ids)
-    assert schedules, "No schedules found for given wallets"
+    if not schedules:
+        return []
+
     schedule_ids = [schedule.id for schedule in schedules]
 
     q = ",".join(["?"] * len(schedules))
