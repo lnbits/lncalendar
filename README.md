@@ -4,6 +4,8 @@ A paid scheduling extension for LNBits that lets you schedule blocks of time on 
 
 It's like Calendly for Bitcoin, but better!
 
+(based on an idea by Mike Jarmuz)
+
 ## Create your calendar or schedule
 
 Click _New Schedule_ and fill the required information
