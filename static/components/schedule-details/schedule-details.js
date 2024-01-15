@@ -83,8 +83,7 @@ async function scheduleDetails(path) {
               schedule
             }
           )
-
-          this.unavailableDates.add(unavailable.data.start_time)
+          this.getUnavailableDates()
           this.dateRange = null
           this.$q.notify({
             type: 'positive',

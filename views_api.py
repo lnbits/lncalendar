@@ -22,6 +22,7 @@ from .crud import (
     set_appointment_paid,
     get_appointments,
     get_appointments_wallets,
+    purge_appointments,
     create_unavailable_time,
     get_unavailable_times,
 )
@@ -118,6 +119,16 @@ async def api_appointment_create(data: CreateAppointment):
     except Exception as e:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
     return {"payment_hash": payment_hash, "payment_request": payment_request}
+
+
+@lncalendar_ext.get("/api/v1/appointment/purge/{schedule_id}")
+async def api_purge_appointments(schedule_id: str):
+    schedule = await get_schedule(schedule_id)
+    if not schedule:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
+        )
+    return await purge_appointments(schedule_id)
 
 
 @lncalendar_ext.get("/api/v1/appointment/{schedule_id}/{payment_hash}")

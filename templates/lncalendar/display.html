@@ -234,6 +234,17 @@
             console.error(err)
           })
       },
+      async purgeAppointments() {
+        try {
+          await LNbits.api.request(
+            'GET',
+            `/lncalendar/api/v1/appointment/purge/${this.schedule.id}`
+          )
+        } catch (error) {
+          console.warn(error)
+          LNbits.utils.notifyApiError(error)
+        }
+      },
       async getAppointments() {
         try {
           let appointments = await LNbits.api.request(
@@ -321,6 +332,7 @@
       this.date = Quasar.utils.date.formatDate(Date.now(), 'YYYY/MM/DD')
       this.availableDays = JSON.parse('{{ available_days | tojson}}')
       this.today = new Date(this.date)
+      await this.purgeAppointments()
       await this.getAppointments()
       this.getUnavailableDates()
     }

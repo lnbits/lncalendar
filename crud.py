@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+from datetime import datetime, timedelta
 
 from lnbits.helpers import urlsafe_short_hash
 
@@ -148,6 +149,19 @@ async def set_appointment_paid(appointment_id: str) -> None:
         WHERE id = ?
         """,
         (appointment_id,),
+    )
+
+
+async def purge_appointments(schedule_id: str) -> None:
+    time_diff = datetime.now() - timedelta(hours=24)
+    await db.execute(
+        """
+        DELETE FROM lncalendar.appointment WHERE schedule = ? AND paid = false AND time < ?
+        """,
+        (
+            schedule_id,
+            time_diff,
+        ),
     )
 
 

@@ -296,7 +296,7 @@
     <schedule-details
       :schedule="scheduleDialog.data"
       :appointments="appointments.filter(a => a.schedule == scheduleDialog.data.id)"
-      :wallet="g.user.wallets[0]"
+      :wallet="g.user.wallets.find(w => w.id == scheduleDialog.data.wallet)"
     ></schedule-details>
   </q-dialog>
 </div>
@@ -359,6 +359,12 @@
               align: 'left',
               label: 'ID',
               field: 'id'
+            },
+            {
+              name: 'paid',
+              align: 'left',
+              label: 'Paid',
+              field: 'paid'
             },
             {
               name: 'name',
