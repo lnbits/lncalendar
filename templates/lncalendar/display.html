@@ -36,6 +36,7 @@
           <q-date
             v-model="date"
             :options="availableDaysFn"
+            today-btn
             class="full-width"
           ></q-date>
         </q-card-section>
@@ -52,7 +53,7 @@
                 class="q-mb-sm"
                 :disable="timePassedFn(slot)"
                 :outline="timeSlot != slot"
-                :color="timeSlot != slot ? 'grey' : 'primary'"
+                :color="timePassedFn(slot) ? 'negative' : timeSlot != slot ? 'grey' : 'primary'"
                 :label="slot"
                 menu-anchor="bottom middle"
               >
@@ -177,7 +178,6 @@
             )}`
           )
         }
-
         return slots
       },
       appointmentDate() {
@@ -204,9 +204,9 @@
         return
       },
       isBooked(time) {
-        return this.appointments.some(
-          appointment => appointment.start_time.split(' ')[1] === time
-        )
+        return this.appointments
+          .filter(ap => ap.date === this.date)
+          .some(appointment => appointment.start_time.split(' ')[1] === time)
       },
       timePassedFn(time) {
         if (this.isBooked(time)) return true

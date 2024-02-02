@@ -166,7 +166,7 @@
     </q-card>
   </div>
 
-  <q-dialog v-model="formDialog.show" position="top">
+  <q-dialog v-model="formDialog.show" position="top" @hide="resetForm">
     <q-card class="q-pa-lg q-pt-xl lnbits__dialog-card">
       <q-form @submit="sendFormData" class="q-gutter-md">
         <q-select
@@ -222,8 +222,16 @@
             ><template v-slot:after>
               <q-icon round dense flat name="schedule" class="cursor-pointer"
                 ><q-popup-proxy transition-show="scale" transition-hide="scale">
-                  <q-time v-model="formDialog.data.start_time" format24h>
+                  <q-time
+                    v-model="formDialog.data.start_time"
+                    :format24h="formDialog.timeFormat24"
+                  >
                     <div class="row items-center justify-end q-gutter-sm">
+                      <q-toggle
+                        class="col-12"
+                        v-model="formDialog.timeFormat24"
+                        label="24h format"
+                      ></q-toggle>
                       <q-btn
                         label="Cancel"
                         color="primary"
@@ -250,8 +258,16 @@
             ><template v-slot:after>
               <q-icon round dense flat name="schedule" class="cursor-pointer"
                 ><q-popup-proxy transition-show="scale" transition-hide="scale">
-                  <q-time v-model="formDialog.data.end_time" format24h>
+                  <q-time
+                    v-model="formDialog.data.end_time"
+                    :format24h="formDialog.timeFormat24"
+                  >
                     <div class="row items-center justify-end q-gutter-sm">
+                      <q-toggle
+                        class="col-12"
+                        v-model="formDialog.timeFormat24"
+                        label="24h format"
+                      ></q-toggle>
                       <q-btn
                         label="Cancel"
                         color="primary"
@@ -283,8 +299,8 @@
             color="primary"
             :disable="formDialog.data.amount == null || formDialog.data.amount < 0 || formDialog.data.name == null || formDialog.data.wallet == null"
             type="submit"
-            >Create schedule</q-btn
-          >
+            :label="formDialog.data.id ? 'Update schedule' : 'Create schedule'"
+          ></q-btn>
           <q-btn v-close-popup flat color="grey" class="q-ml-auto"
             >Cancel</q-btn
           >
@@ -402,6 +418,7 @@
           show: false,
           show_start_time: false,
           show_end_time: false,
+          timeFormat24: true,
           data: {}
         },
         scheduleDialog: {
@@ -422,6 +439,9 @@
             this.schedules = response.data.map(mapSchedule)
           })
       },
+      resetForm() {
+        this.formDialog.data = {}
+      },
       sendFormData() {
         const data = {...this.formDialog.data}
         const wallet = _.findWhere(this.g.user.wallets, {id: data.wallet})
@@ -431,7 +451,7 @@
           this.createSchedule(wallet, data)
         }
         this.formDialog.show = false
-        this.formDialog.data = {}
+        this.resetForm()
       },
       async createSchedule(wallet, data) {
         try {
@@ -441,7 +461,7 @@
             wallet.adminkey,
             data
           )
-          this.schedules.push(mapSchedule(response.data))
+          this.getSchedules()
           this.$q.notify({
             type: 'positive',
             message: 'New schedule created',
@@ -538,6 +558,13 @@
       if (this.g.user.wallets.length) {
         this.getSchedules()
         this.getAppointments()
+
+        // check if time format is 24h
+        this.formDialog.timeFormat24 = !new Intl.DateTimeFormat([], {
+          hour: 'numeric'
+        })
+          .format(0)
+          .match(/\s/)
       }
     }
   })
