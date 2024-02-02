@@ -263,6 +263,11 @@
                     :format24h="formDialog.timeFormat24"
                   >
                     <div class="row items-center justify-end q-gutter-sm">
+                      <q-toggle
+                        class="col-12"
+                        v-model="formDialog.timeFormat24"
+                        label="24h format"
+                      ></q-toggle>
                       <q-btn
                         label="Cancel"
                         color="primary"
@@ -456,7 +461,7 @@
             wallet.adminkey,
             data
           )
-          this.schedules.push(mapSchedule(response.data))
+          this.getSchedules()
           this.$q.notify({
             type: 'positive',
             message: 'New schedule created',
