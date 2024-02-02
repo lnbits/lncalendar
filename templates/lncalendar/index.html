@@ -166,7 +166,7 @@
     </q-card>
   </div>
 
-  <q-dialog v-model="formDialog.show" position="top">
+  <q-dialog v-model="formDialog.show" position="top" @hide="resetForm">
     <q-card class="q-pa-lg q-pt-xl lnbits__dialog-card">
       <q-form @submit="sendFormData" class="q-gutter-md">
         <q-select
@@ -294,8 +294,8 @@
             color="primary"
             :disable="formDialog.data.amount == null || formDialog.data.amount < 0 || formDialog.data.name == null || formDialog.data.wallet == null"
             type="submit"
-            >Create schedule</q-btn
-          >
+            :label="formDialog.data.id ? 'Update schedule' : 'Create schedule'"
+          ></q-btn>
           <q-btn v-close-popup flat color="grey" class="q-ml-auto"
             >Cancel</q-btn
           >
@@ -434,6 +434,9 @@
             this.schedules = response.data.map(mapSchedule)
           })
       },
+      resetForm() {
+        this.formDialog.data = {}
+      },
       sendFormData() {
         const data = {...this.formDialog.data}
         const wallet = _.findWhere(this.g.user.wallets, {id: data.wallet})
@@ -443,7 +446,7 @@
           this.createSchedule(wallet, data)
         }
         this.formDialog.show = false
-        this.formDialog.data = {}
+        this.resetForm()
       },
       async createSchedule(wallet, data) {
         try {
