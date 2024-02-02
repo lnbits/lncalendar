@@ -222,8 +222,16 @@
             ><template v-slot:after>
               <q-icon round dense flat name="schedule" class="cursor-pointer"
                 ><q-popup-proxy transition-show="scale" transition-hide="scale">
-                  <q-time v-model="formDialog.data.start_time" format24h>
+                  <q-time
+                    v-model="formDialog.data.start_time"
+                    :format24h="formDialog.timeFormat24"
+                  >
                     <div class="row items-center justify-end q-gutter-sm">
+                      <q-toggle
+                        class="col-12"
+                        v-model="formDialog.timeFormat24"
+                        label="24h format"
+                      ></q-toggle>
                       <q-btn
                         label="Cancel"
                         color="primary"
@@ -250,7 +258,10 @@
             ><template v-slot:after>
               <q-icon round dense flat name="schedule" class="cursor-pointer"
                 ><q-popup-proxy transition-show="scale" transition-hide="scale">
-                  <q-time v-model="formDialog.data.end_time" format24h>
+                  <q-time
+                    v-model="formDialog.data.end_time"
+                    :format24h="formDialog.timeFormat24"
+                  >
                     <div class="row items-center justify-end q-gutter-sm">
                       <q-btn
                         label="Cancel"
@@ -402,6 +413,7 @@
           show: false,
           show_start_time: false,
           show_end_time: false,
+          timeFormat24: true,
           data: {}
         },
         scheduleDialog: {
@@ -538,6 +550,13 @@
       if (this.g.user.wallets.length) {
         this.getSchedules()
         this.getAppointments()
+
+        // check if time format is 24h
+        this.formDialog.timeFormat24 = !new Intl.DateTimeFormat([], {
+          hour: 'numeric'
+        })
+          .format(0)
+          .match(/\s/)
       }
     }
   })
