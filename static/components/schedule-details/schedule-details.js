@@ -13,7 +13,29 @@ async function scheduleDetails(path) {
         events: [],
         splitterModel: 60,
         eventsByDate: [],
-        unavailableDates: new Set()
+        unavailableDates: new Set(),
+        unavailableDatesBlocks: [],
+        selectedBlocks: [],
+        unavailableTable: {
+          columns: [
+            {name: 'id', align: 'left', label: 'ID', field: 'id'},
+            {
+              name: 'starts',
+              align: 'left',
+              label: 'Starts',
+              field: 'start_time'
+            },
+            {
+              name: 'ens',
+              align: 'left',
+              label: 'Ends',
+              field: 'end_time'
+            }
+          ],
+          pagination: {
+            rowsPerPage: 10
+          }
+        }
       }
     },
 
@@ -65,6 +87,8 @@ async function scheduleDetails(path) {
               ...this.unavailableDates,
               ...extractUnavailableDates(res.data)
             ])
+            this.unavailableDatesBlocks = res.data
+            console.log(this.unavailableDatesBlocks)
           })
           .catch(err => {
             console.log(err)

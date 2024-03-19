@@ -192,3 +192,9 @@ async def get_unavailable_times(schedule_id: str) -> List[UnavailableTime]:
         "SELECT * FROM lncalendar.unavailable WHERE schedule = ?", (schedule_id,)
     )
     return [UnavailableTime(**row) for row in rows]
+
+
+async def delete_unavailable_time(unavailable_time_id: str) -> None:
+    await db.execute(
+        "DELETE FROM lncalendar.unavailable WHERE id = ?", (unavailable_time_id,)
+    )

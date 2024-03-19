@@ -4,6 +4,7 @@
 >
   <q-tabs v-model="tab" no-caps align="justify">
     <q-tab name="info" label="Schedule Info"></q-tab>
+    <q-tab name="edit_unavailable" label="Unavailable Dates"></q-tab>
     <q-tab name="unavailable" label="Set Unavailable"></q-tab>
   </q-tabs>
   <q-card-section style="min-height: 50vh" class="scroll">
@@ -16,7 +17,6 @@
                 v-model="date"
                 :events="events"
                 event-color="primary"
-                @input="dateChanged"
                 :options="availableDaysFn"
                 today-btn
               ></q-date>
@@ -68,13 +68,34 @@
               >
               <span v-else>Select a date range to be unavailable</span>
             </p>
-
             <q-btn
               align="right"
               color="primary"
               label="Set Unavailable"
               @click="setUnavailableDates"
               :disable="!dateRange"
+            ></q-btn>
+          </div>
+        </div>
+      </q-tab-panel>
+      <q-tab-panel name="edit_unavailable">
+        <p class="h6">Select days off</p>
+        <div class="q-pa-md">
+          <q-table
+            title="Treats"
+            :data="unavailableDatesBlocks"
+            :columns="unavailableTable.columns"
+            row-key="id"
+            selection="multiple"
+            :selected.sync="selectedBlocks"
+          ></q-table>
+          <div class="q-mt-lg">
+            <q-btn
+              align="right"
+              color="primary"
+              label="Delete Selected"
+              @click=""
+              :disable="!selectedBlocks.length"
             ></q-btn>
           </div>
         </div>

@@ -25,6 +25,7 @@ from .crud import (
     purge_appointments,
     create_unavailable_time,
     get_unavailable_times,
+    delete_unavailable_time,
 )
 from .models import Schedule, CreateSchedule, CreateUnavailableTime, CreateAppointment
 
@@ -196,3 +197,22 @@ async def api_unavailable_get(schedule_id: str):
             status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
         )
     return await get_unavailable_times(schedule_id)
+
+
+@lncalendar_ext.delete("/api/v1/unavailable/{schedule_id}/{unavailable_id}")
+async def api_unavailable_delete(
+    schedule_id: str,
+    unavailable_id: str,
+    wallet: WalletTypeInfo = Depends(require_admin_key),
+):
+    schedule = await get_schedule(schedule_id)
+    if not schedule:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
+        )
+    if schedule.wallet != wallet.wallet.id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
+        )
+    await delete_unavailable_time(unavailable_id)
+    return "", HTTPStatus.NO_CONTENT
