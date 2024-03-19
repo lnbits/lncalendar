@@ -86,16 +86,17 @@
             :data="unavailableDatesBlocks"
             :columns="unavailableTable.columns"
             row-key="id"
-            selection="multiple"
-            :selected.sync="selectedBlocks"
+            selection="single"
+            :selected.sync="selectedBlock"
+            :pagination.sync="unavailableTable.pagination"
           ></q-table>
           <div class="q-mt-lg">
             <q-btn
               align="right"
               color="primary"
               label="Delete Selected"
-              @click=""
-              :disable="!selectedBlocks.length"
+              @click="deleteUnavailableDate"
+              :disable="!selectedBlock.length"
             ></q-btn>
           </div>
         </div>

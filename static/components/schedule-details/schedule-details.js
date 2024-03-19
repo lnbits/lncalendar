@@ -15,21 +15,24 @@ async function scheduleDetails(path) {
         eventsByDate: [],
         unavailableDates: new Set(),
         unavailableDatesBlocks: [],
-        selectedBlocks: [],
+        selectedBlock: [],
         unavailableTable: {
           columns: [
-            {name: 'id', align: 'left', label: 'ID', field: 'id'},
             {
               name: 'starts',
               align: 'left',
               label: 'Starts',
-              field: 'start_time'
+              field: 'start_time',
+              field: row => row.start_time,
+              sortable: true
             },
             {
               name: 'ens',
               align: 'left',
               label: 'Ends',
-              field: 'end_time'
+              field: 'end_time',
+              field: row => row.end_time,
+              sortable: true
             }
           ],
           pagination: {
@@ -88,7 +91,6 @@ async function scheduleDetails(path) {
               ...extractUnavailableDates(res.data)
             ])
             this.unavailableDatesBlocks = res.data
-            console.log(this.unavailableDatesBlocks)
           })
           .catch(err => {
             console.log(err)
@@ -118,6 +120,27 @@ async function scheduleDetails(path) {
           console.warn(error)
           LNbits.utils.notifyApiError(error)
         }
+      },
+      async deleteUnavailableDate() {
+        const id = this.selectedBlock[0].id
+        await LNbits.api
+          .request(
+            'DELETE',
+            `/lncalendar/api/v1/unavailable/${this.schedule.id}/${id}`,
+            this.wallet.adminkey
+          )
+          .then(res => {
+            this.selectedBlock = []
+            this.getUnavailableDates()
+            this.$q.notify({
+              type: 'positive',
+              message: 'Unavailable date deleted',
+              timeout: 3000
+            })
+          })
+          .catch(err => {
+            console.log(err)
+          })
       }
     },
 
