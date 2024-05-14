@@ -2,7 +2,7 @@
   "name": "LNCalendar",
   "short_description": "A paid scheduling extension",
   "tile": "/lncalendar/static/image/lncalendar.png",
-  "min_lnbits_version": "0.12.0",
+  "min_lnbits_version": "0.12.5",
   "contributors": [
     {
       "name": "talvasconcelos",
