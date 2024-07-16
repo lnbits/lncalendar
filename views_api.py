@@ -3,8 +3,11 @@ from http import HTTPStatus
 from fastapi import Depends, Query
 from fastapi.exceptions import HTTPException
 
-from lnbits.core.crud import get_user, get_wallet, get_standalone_payment
-from lnbits.core.services import check_transaction_status, create_invoice
+from loguru import logger
+
+from lnbits.core.crud import get_user
+from lnbits.core.services import create_invoice
+from lnbits.core.views.api import api_payment
 from lnbits.decorators import (
     WalletTypeInfo,
     require_admin_key,
@@ -25,6 +28,7 @@ from .crud import (
     purge_appointments,
     create_unavailable_time,
     get_unavailable_times,
+    delete_unavailable_time,
 )
 from .models import Schedule, CreateSchedule, CreateUnavailableTime, CreateAppointment
 
@@ -133,21 +137,20 @@ async def api_purge_appointments(schedule_id: str):
 
 @lncalendar_ext.get("/api/v1/appointment/{schedule_id}/{payment_hash}")
 async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
-    payment = await get_standalone_payment(payment_hash)
-    if not payment:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="Payment does not exist."
-        )
-
     schedule = await get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
         )
-    if not payment.pending and payment.amount == schedule.amount * 1000:
-        await set_appointment_paid(payment_hash)
-        return {"paid": True}
 
+    try:
+        status = await api_payment(payment_hash)
+        if status["paid"]:
+            await set_appointment_paid(payment_hash)
+            return {"paid": True}
+
+    except Exception:
+        return {"paid": False}
     return {"paid": False}
 
 
@@ -196,3 +199,22 @@ async def api_unavailable_get(schedule_id: str):
             status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
         )
     return await get_unavailable_times(schedule_id)
+
+
+@lncalendar_ext.delete("/api/v1/unavailable/{schedule_id}/{unavailable_id}")
+async def api_unavailable_delete(
+    schedule_id: str,
+    unavailable_id: str,
+    wallet: WalletTypeInfo = Depends(require_admin_key),
+):
+    schedule = await get_schedule(schedule_id)
+    if not schedule:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
+        )
+    if schedule.wallet != wallet.wallet.id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
+        )
+    await delete_unavailable_time(unavailable_id)
+    return "", HTTPStatus.NO_CONTENT
