@@ -1,17 +1,19 @@
-from typing import List, Optional, Union
 from datetime import datetime, timedelta
+from typing import Optional, Union
 
+from lnbits.db import Database
 from lnbits.helpers import urlsafe_short_hash
 
-from . import db
 from .models import (
+    Appointment,
+    CreateAppointment,
     CreateSchedule,
+    CreateUnavailableTime,
     Schedule,
     UnavailableTime,
-    CreateUnavailableTime,
-    CreateAppointment,
-    Appointment,
 )
+
+db = Database("ext_lncalendar")
 
 
 ## Schedule CRUD
@@ -19,7 +21,8 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
     schedule_id = urlsafe_short_hash()
     await db.execute(
         """
-        INSERT INTO lncalendar.schedule (id, wallet, name, start_day, end_day, start_time, end_time, amount)
+        INSERT INTO lncalendar.schedule
+        (id, wallet, name, start_day, end_day, start_time, end_time, amount)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
@@ -41,7 +44,8 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
 async def update_schedule(schedule_id: str, data: CreateSchedule) -> Schedule:
     await db.execute(
         """
-        UPDATE lncalendar.schedule SET name = ?, start_day = ?, end_day = ?, start_time = ?, end_time = ?, amount = ?
+        UPDATE lncalendar.schedule SET name = ?, start_day = ?, end_day = ?,
+        start_time = ?, end_time = ?, amount = ?
         WHERE id = ?
         """,
         (
@@ -66,7 +70,7 @@ async def get_schedule(schedule_id: str) -> Optional[Schedule]:
     return Schedule(**row) if row else None
 
 
-async def get_schedules(wallet_ids: Union[str, List[str]]) -> List[Schedule]:
+async def get_schedules(wallet_ids: Union[str, list[str]]) -> list[Schedule]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
 
@@ -89,7 +93,8 @@ async def create_appointment(
     appointment_id = payment_hash
     await db.execute(
         """
-        INSERT INTO lncalendar.appointment (id, name, email, info, start_time, end_time, schedule)
+        INSERT INTO lncalendar.appointment
+        (id, name, email, info, start_time, end_time, schedule)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
@@ -114,7 +119,7 @@ async def get_appointment(appointment_id: str) -> Optional[Appointment]:
     return Appointment(**row) if row else None
 
 
-async def get_appointments(schedule_id: str) -> List[Appointment]:
+async def get_appointments(schedule_id: str) -> list[Appointment]:
     print(schedule_id)
     rows = await db.fetchall(
         "SELECT * FROM lncalendar.appointment WHERE schedule = ?", (schedule_id,)
@@ -123,8 +128,8 @@ async def get_appointments(schedule_id: str) -> List[Appointment]:
 
 
 async def get_appointments_wallets(
-    wallet_ids: Union[str, List[str]]
-) -> List[Appointment]:
+    wallet_ids: Union[str, list[str]]
+) -> list[Appointment]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
 
@@ -156,7 +161,8 @@ async def purge_appointments(schedule_id: str) -> None:
     time_diff = datetime.now() - timedelta(hours=24)
     await db.execute(
         f"""
-        DELETE FROM lncalendar.appointment WHERE schedule = ? AND paid = false AND time < {db.timestamp_placeholder}
+        DELETE FROM lncalendar.appointment
+        WHERE schedule = ? AND paid = false AND time < {db.timestamp_placeholder}
         """,
         (
             schedule_id,
@@ -187,7 +193,7 @@ async def get_unavailable_time(unavailable_time_id: str) -> Optional[Unavailable
     return UnavailableTime(**row) if row else None
 
 
-async def get_unavailable_times(schedule_id: str) -> List[UnavailableTime]:
+async def get_unavailable_times(schedule_id: str) -> list[UnavailableTime]:
     rows = await db.fetchall(
         "SELECT * FROM lncalendar.unavailable WHERE schedule = ?", (schedule_id,)
     )
