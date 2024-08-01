@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 
-from lnbits.db import Database
-from lnbits.helpers import template_renderer
-
-db = Database("ext_lncalendar")
+from .crud import db
+from .views import lncalendar_generic_router
+from .views_api import lncalendar_api_router
 
 lncalendar_ext: APIRouter = APIRouter(prefix="/lncalendar", tags=["LNCalendar"])
+lncalendar_ext.include_router(lncalendar_generic_router)
+lncalendar_ext.include_router(lncalendar_api_router)
 
 lncalendar_static_files = [
     {
@@ -14,10 +15,4 @@ lncalendar_static_files = [
     }
 ]
 
-
-def lncalendar_renderer():
-    return template_renderer(["lncalendar/templates"])
-
-
-from .views import *  # noqa: F401,F403
-from .views_api import *  # noqa: F401,F403
+__all__ = ["db", "lncalendar_ext", "lncalendar_static_files"]
