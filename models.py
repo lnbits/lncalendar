@@ -41,7 +41,7 @@ class Schedule(BaseModel):
 
     @property
     def availabe_days(self):
-        return [i for i in range(self.start_day, self.end_day + 1)]
+        return list(range(self.start_day, self.end_day + 1))
 
 
 class UnavailableTime(BaseModel):
