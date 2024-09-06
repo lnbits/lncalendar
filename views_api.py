@@ -73,7 +73,11 @@ async def api_schedule_update(
             status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
         )
 
-    schedule = await update_schedule(schedule_id, data)
+    for k, v in data.dict().items():
+        if v is not None:
+            setattr(schedule, k, v)
+
+    schedule = await update_schedule(schedule)
     return {**schedule.dict(), "available_days": schedule.availabe_days}
 
 
