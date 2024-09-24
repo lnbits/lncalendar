@@ -149,10 +149,9 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Payment does not exist"
         )
-    status = await payment.check_status()
-    if status.success:
+    if payment.success:
         await set_appointment_paid(payment_hash)
-    return {"paid": status.success}
+    return {"paid": payment.success}
 
 
 @lncalendar_api_router.get("/api/v1/appointment/{schedule_id}")
