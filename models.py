@@ -60,3 +60,4 @@ class Appointment(BaseModel):
     end_time: str
     schedule: str
     paid: bool
+    time: int
