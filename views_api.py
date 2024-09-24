@@ -1,14 +1,13 @@
+import sched
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.exceptions import HTTPException
+
 from lnbits.core.crud import get_standalone_payment, get_user
-from lnbits.core.models import WalletTypeInfo
+from lnbits.core.models import User, WalletTypeInfo
 from lnbits.core.services import create_invoice
-from lnbits.decorators import (
-    require_admin_key,
-    require_invoice_key,
-)
+from lnbits.decorators import check_user_exists, require_admin_key, require_invoice_key
 
 from .crud import (
     create_appointment,
@@ -32,26 +31,29 @@ lncalendar_api_router = APIRouter()
 
 @lncalendar_api_router.get("/api/v1/schedule")
 async def api_schedules(
-    wallet: WalletTypeInfo = Depends(require_invoice_key),
+    user: User = Depends(check_user_exists),
     all_wallets: bool = Query(False),
 ):
-    wallet_ids = [wallet.wallet.id]
+    # wallet_ids = [wallet.wallet.id]
 
-    if all_wallets:
-        user = await get_user(wallet.wallet.user)
-        wallet_ids = user.wallet_ids if user else []
-
+    # if all_wallets:
+    # user = await get_user(wallet.wallet.user)
+    # wallet_ids = user.wallet_ids if user else []
+    print("############# user.wallet_ids", user.wallet_ids)
     return [
         {**schedule.dict(), "available_days": schedule.availabe_days}
-        for schedule in await get_schedules(wallet_ids)
+        for schedule in await get_schedules(user.wallet_ids)
     ]
 
 
 @lncalendar_api_router.post("/api/v1/schedule")
 async def api_schedule_create(
-    data: CreateSchedule, wallet: WalletTypeInfo = Depends(require_admin_key)
+    data: CreateSchedule, user: User = Depends(check_user_exists)
 ):
-    schedule = await create_schedule(wallet_id=wallet.wallet.id, data=data)
+    if data.wallet not in user.wallet_ids:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your wallet.")
+
+    schedule = await create_schedule(wallet_id=data.wallet, data=data)
     return schedule.dict()
 
 
@@ -59,7 +61,8 @@ async def api_schedule_create(
 async def api_schedule_update(
     schedule_id: str,
     data: CreateSchedule,
-    wallet: WalletTypeInfo = Depends(require_invoice_key),
+    user: User = Depends(check_user_exists),
+    # wallet: WalletTypeInfo = Depends(require_invoice_key),
 ):
     schedule = await get_schedule(schedule_id)
 
@@ -68,7 +71,11 @@ async def api_schedule_update(
             status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
         )
 
-    if schedule.wallet != wallet.wallet.id:
+    # if schedule.wallet != wallet.wallet.id:
+    #     raise HTTPException(
+    #         status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
+    #     )
+    if schedule.wallet not in user.wallet_ids:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
         )
