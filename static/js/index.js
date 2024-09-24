@@ -1,4 +1,4 @@
-window.app = new Vue.createApp({
+window.app = Vue.createApp({
   el: '#vue',
   mixins: [window.windowMixin],
   data: function () {
