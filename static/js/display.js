@@ -1,7 +1,6 @@
 window.app = Vue.createApp({
   el: '#vue',
   mixins: [window.windowMixin],
-  delimiters: ['${', '}'],
   data: function () {
     return {
       date: null,
@@ -193,9 +192,9 @@ window.app = Vue.createApp({
     }
   },
   async created() {
-    this.schedule = JSON.parse('{{ schedule | tojson}}')
+    this.schedule = schedule
+    this.availableDays = availableDays
     this.date = Quasar.date.formatDate(Date.now(), 'YYYY/MM/DD')
-    this.availableDays = JSON.parse('{{ available_days | tojson}}')
     this.today = new Date(this.date)
     await this.purgeAppointments()
     await this.getAppointments()

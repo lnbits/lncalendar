@@ -1,6 +1,5 @@
 window.app.component('schedule-details', {
   name: 'schedule-details',
-  delimiters: ['${', '}'],
   props: ['schedule', 'appointments', 'wallet'],
   data: function () {
     return {
@@ -187,9 +186,9 @@ window.app.component('schedule-details', {
                     >
                       <q-card>
                         <q-card-section class="text-caption">
-                          <p>${event.info || 'No description'}</p>
-                          <p class="q-mt-lg">${timeFormatted(event).fromNow}</p>
-                          <p v-if="event.email">Contact: ${event.email}</p>
+                          <p v-text="event.info || 'No description'"></p>
+                          <p class="q-mt-lg" v-text="timeFormatted(event).fromNow"></p>
+                          <p v-if="event.email" v-text="'Contact: '+event.email"></p>
                         </q-card-section>
                       </q-card>
                     </q-expansion-item>
@@ -214,9 +213,7 @@ window.app.component('schedule-details', {
               ></q-date>
               <div class="q-mt-lg">
                 <p>
-                  <span v-if="dateRange"
-                    >Set unavailable from ${dateRange.from} to ${dateRange.to}</span
-                  >
+                  <span v-if="dateRange" v-text="'Set unavailable from '+dateRange.from+' to '+dateRange.to"></span>
                   <span v-else>Select a date range to be unavailable</span>
                 </p>
                 <q-btn
@@ -233,8 +230,8 @@ window.app.component('schedule-details', {
             <p class="h6">Select days off</p>
             <div class="q-pa-md">
               <q-table
-                title="Treats"
-                :data="unavailableDatesBlocks"
+                title="Availability"
+                :rows="unavailableDatesBlocks"
                 :columns="unavailableTable.columns"
                 row-key="id"
                 selection="single"

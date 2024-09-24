@@ -3,7 +3,7 @@
   <div class="col-12 col-lg-8">
     <q-card class="q-pa-lg">
       <q-card-section class="q-pa-none">
-        <h4 class="q-mt-none q-mb-md">${schedule.name}</h4>
+        <h4 class="q-mt-none q-mb-md" v-text="schedule.name"></h4>
       </q-card-section>
       <q-separator></q-separator>
       <div class="row q-mt-md">
@@ -42,44 +42,38 @@
         </q-card-section>
         <q-card-section class="col-12 col-sm-5 col-md-3">
           <div class="text-h6 q-mb-sm">Select time</div>
-          <template>
-            <div
-              class="column items-center no-wrap scroll"
-              style="max-height: 50vh"
+          <div
+            class="column items-center no-wrap scroll"
+            style="max-height: 50vh"
+          >
+            <q-btn-dropdown
+              v-for="(slot, i) in timeSlots"
+              :key="i"
+              class="q-mb-sm"
+              :disable="timePassedFn(slot)"
+              :outline="timeSlot != slot"
+              :color="timePassedFn(slot) ? 'negative' : timeSlot != slot ? 'grey' : 'primary'"
+              :label="slot"
+              menu-anchor="bottom middle"
             >
-              <q-btn-dropdown
-                v-for="(slot, i) in timeSlots"
-                :key="i"
-                class="q-mb-sm"
-                :disable="timePassedFn(slot)"
-                :outline="timeSlot != slot"
-                :color="timePassedFn(slot) ? 'negative' : timeSlot != slot ? 'grey' : 'primary'"
-                :label="slot"
-                menu-anchor="bottom middle"
-              >
-                <q-list>
-                  <q-item
-                    clickable
-                    v-close-popup
-                    @click="bookAppointment(slot)"
-                  >
-                    <q-item-section>
-                      <q-item-label>Confirm</q-item-label>
-                    </q-item-section>
-                  </q-item>
+              <q-list>
+                <q-item clickable v-close-popup @click="bookAppointment(slot)">
+                  <q-item-section>
+                    <q-item-label>Confirm</q-item-label>
+                  </q-item-section>
+                </q-item>
 
-                  <q-item clickable v-close-popup @click="timeSlot = null">
-                    <q-item-section>
-                      <q-item-label>Cancel</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-btn-dropdown>
-            </div>
-          </template>
+                <q-item clickable v-close-popup @click="timeSlot = null">
+                  <q-item-section>
+                    <q-item-label>Cancel</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+          </div>
         </q-card-section>
       </div>
-      <q-card-section>${appointmentDate}</q-card-section>
+      <q-card-section v-text="appointmentDate"></q-card-section>
       <q-card-section class="row items-end q-mt-lg">
         <q-btn
           unelevated
@@ -124,6 +118,10 @@
   </q-dialog>
 </div>
 {% endblock %} {% block scripts %}
+<script>
+  const schedule = {{ schedule | tojson }};
+  const availableDays = {{ available_days | tojson }};
+</script>
 <script src="{{ static_url_for('lncalendar/static', path='js/utils.js') }}"></script>
 <script src="{{ static_url_for('lncalendar/static', path='js/display.js') }}"></script>
 {% endblock %}

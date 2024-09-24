@@ -162,9 +162,9 @@ window.app = Vue.createApp({
           wallet.inkey,
           data
         )
-        const index = _.findIndex(this.paywalls, {id: data.id})
-        this.paywalls.splice(index, 1, mapSchedule(response.data))
-        this.$q.notify({
+        const index = _.findIndex(this.schedules, {id: data.id})
+        this.schedules.splice(index, 1, mapSchedule(response.data))
+        Quasar.Notify.create({
           type: 'positive',
           message: 'Schedule Updated',
           timeout: 5000
