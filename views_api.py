@@ -1,9 +1,7 @@
-import sched
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.exceptions import HTTPException
-
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.models import User, WalletTypeInfo
 from lnbits.core.services import create_invoice

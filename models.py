@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import Query
@@ -49,6 +50,7 @@ class UnavailableTime(BaseModel):
     start_time: str
     end_time: str
     schedule: str
+    created_at: datetime
 
 
 class Appointment(BaseModel):
@@ -60,4 +62,4 @@ class Appointment(BaseModel):
     end_time: str
     schedule: str
     paid: bool
-    time: int
+    created_at: datetime

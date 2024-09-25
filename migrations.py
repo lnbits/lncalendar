@@ -51,3 +51,21 @@ async def m001_initial(db):
         );
     """
     )
+
+
+async def m002_rename_time_to_created_at(db):
+    """
+    Rename time to created_at in the unavailability table.
+    """
+    await db.execute(
+        """
+        ALTER TABLE lncalendar.unavailable
+        RENAME COLUMN time TO created_at;
+        """
+    )
+    await db.execute(
+        """
+        ALTER TABLE lncalendar.appointment
+        RENAME COLUMN time TO created_at;
+        """
+    )
