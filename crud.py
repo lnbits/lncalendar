@@ -73,6 +73,7 @@ async def create_appointment(
         end_time=data.end_time,
         schedule=schedule_id,
         paid=False,
+        created_at=datetime.now(),
     )
     await db.insert("lncalendar.appointment", appointment)
     return appointment
@@ -140,6 +141,7 @@ async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTim
         start_time=data.start_time,
         end_time=data.end_time or data.start_time,
         schedule=data.schedule,
+        created_at=datetime.now(),
     )
     await db.insert("lncalendar.unavailable", unavailable_time)
     return unavailable_time
