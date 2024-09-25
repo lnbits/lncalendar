@@ -16,7 +16,7 @@ class CreateSchedule(BaseModel):
 
 class CreateUnavailableTime(BaseModel):
     start_time: str = Query(...)
-    end_time: str = Query(...)
+    end_time: Optional[str] = Query(None)
     schedule: str = Query(...)
 
 

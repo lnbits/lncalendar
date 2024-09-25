@@ -148,7 +148,7 @@ async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTim
     unavailable_time = UnavailableTime(
         id=unavailable_time_id,
         start_time=data.start_time,
-        end_time=data.end_time,
+        end_time=data.end_time or data.start_time,
         schedule=data.schedule,
     )
     await db.execute(
