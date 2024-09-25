@@ -1,0 +1,116 @@
+<q-card
+  class="q-pa-lg q-pt-xl lnbits__dialog-card"
+  style="min-height: 60vh; width: 700px; max-width: 80vw"
+>
+  <q-tabs v-model="tab" no-caps align="justify">
+    <q-tab name="info" label="Schedule Info"></q-tab>
+    <q-tab name="edit_unavailable" label="Unavailable Dates"></q-tab>
+    <q-tab name="unavailable" label="Set Unavailable"></q-tab>
+  </q-tabs>
+  <q-card-section style="min-height: 50vh" class="scroll">
+    <q-tab-panels v-model="tab">
+      <q-tab-panel name="info">
+        <q-splitter v-model="splitterModel">
+          <template v-slot:before>
+            <div class="q-pa-md">
+              <q-date
+                v-model="date"
+                :events="events"
+                event-color="primary"
+                :options="availableDaysFn"
+                today-btn
+              ></q-date>
+            </div>
+          </template>
+          <template v-slot:after>
+            <div class="q-pa-md" v-if="eventsByDate.length">
+              <q-list bordered>
+                <q-expansion-item
+                  v-for="event in eventsByDate"
+                  :key="event.id"
+                  group="events"
+                  expand-separator
+                  icon="event"
+                  :label="event.name"
+                  :caption="timeFormatted(event).time"
+                >
+                  <q-card>
+                    <q-card-section class="text-caption">
+                      <p v-text="event.info || 'No description'"></p>
+                      <p
+                        class="q-mt-lg"
+                        v-text="timeFormatted(event).fromNow"
+                      ></p>
+                      <p
+                        v-if="event.email"
+                        v-text="'Contact: '+event.email"
+                      ></p>
+                    </q-card-section>
+                  </q-card>
+                </q-expansion-item>
+              </q-list>
+            </div>
+            <div v-else class="q-pa-md">
+              <p class="text-h5">No appointments</p>
+            </div>
+          </template>
+        </q-splitter>
+      </q-tab-panel>
+      <q-tab-panel name="unavailable">
+        <p class="h6">Select days off</p>
+        <div class="q-pa-md">
+          <q-date
+            v-model="dateRange"
+            landscape
+            range
+            today-btn
+            :events="events"
+            :options="availableDaysFn"
+          ></q-date>
+          <div class="q-mt-lg">
+            <p>
+              <span
+                v-if="dateRange"
+                v-text="'Set unavailable from '+dateRange.from+' to '+dateRange.to"
+              ></span>
+              <span v-else>Select a date range to be unavailable</span>
+            </p>
+            <q-btn
+              align="right"
+              color="primary"
+              label="Set Unavailable"
+              @click="setUnavailableDates"
+              :disable="!dateRange"
+            ></q-btn>
+          </div>
+        </div>
+      </q-tab-panel>
+      <q-tab-panel name="edit_unavailable">
+        <p class="h6">Select days off</p>
+        <div class="q-pa-md">
+          <q-table
+            title="Availability"
+            :rows="unavailableDatesBlocks"
+            :columns="unavailableTable.columns"
+            row-key="id"
+            selection="single"
+            :selected.sync="selectedBlock"
+            :pagination.sync="unavailableTable.pagination"
+          ></q-table>
+          <div class="q-mt-lg">
+            <q-btn
+              align="right"
+              color="primary"
+              label="Delete Selected"
+              @click="deleteUnavailableDate"
+              :disable="!selectedBlock.length"
+            ></q-btn>
+          </div>
+        </div>
+      </q-tab-panel>
+    </q-tab-panels>
+  </q-card-section>
+  <q-card-actions align="right">
+    <q-btn flat label="Close" v-close-popup />
+  </q-card-actions>
+</q-card>
