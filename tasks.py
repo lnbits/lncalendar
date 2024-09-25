@@ -18,7 +18,7 @@ async def wait_for_paid_invoices():
 
 
 async def on_invoice_paid(payment: Payment) -> None:
-    if payment.extra.get("tag") != "lncalendar":
+    if not payment.extra or payment.extra.get("tag") != "lncalendar":
         # not a lncalendar invoice
         return
 
@@ -31,5 +31,4 @@ async def on_invoice_paid(payment: Payment) -> None:
     assert schedule
 
     if payment.amount == schedule.amount * 1000:
-        await payment.set_pending(False)
         await set_appointment_paid(payment.payment_hash)

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Union
 
 from lnbits.db import Database
-from lnbits.helpers import urlsafe_short_hash
+from lnbits.helpers import insert_query, update_query, urlsafe_short_hash
 
 from .models import (
     Appointment,
@@ -16,56 +16,37 @@ from .models import (
 db = Database("ext_lncalendar")
 
 
-## Schedule CRUD
 async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
     schedule_id = urlsafe_short_hash()
-    await db.execute(
-        """
-        INSERT INTO lncalendar.schedule
-        (id, wallet, name, start_day, end_day, start_time, end_time, amount)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            schedule_id,
-            wallet_id,
-            data.name,
-            data.start_day,
-            data.end_day,
-            data.start_time,
-            data.end_time,
-            data.amount,
-        ),
+    schedule = Schedule(
+        id=schedule_id,
+        wallet=wallet_id,
+        name=data.name,
+        start_day=data.start_day,
+        end_day=data.end_day,
+        start_time=data.start_time,
+        end_time=data.end_time,
+        amount=data.amount,
     )
-    schedule = await get_schedule(schedule_id)
-    assert schedule, "Newly created schedule couldn't be retrieved"
+    await db.execute(
+        insert_query("lncalendar.schedule", schedule),
+        schedule.dict(),
+    )
     return schedule
 
 
-async def update_schedule(schedule_id: str, data: CreateSchedule) -> Schedule:
+async def update_schedule(schedule: Schedule) -> Schedule:
     await db.execute(
-        """
-        UPDATE lncalendar.schedule SET name = ?, start_day = ?, end_day = ?,
-        start_time = ?, end_time = ?, amount = ?
-        WHERE id = ?
-        """,
-        (
-            data.name,
-            data.start_day,
-            data.end_day,
-            data.start_time,
-            data.end_time,
-            data.amount,
-            schedule_id,
-        ),
+        update_query("lncalendar.schedule", schedule),
+        schedule.dict(),
     )
-    schedule = await get_schedule(schedule_id)
-    assert schedule, "Updated schedule couldn't be retrieved"
     return schedule
 
 
 async def get_schedule(schedule_id: str) -> Optional[Schedule]:
     row = await db.fetchone(
-        "SELECT * FROM lncalendar.schedule WHERE id = ?", (schedule_id,)
+        "SELECT * FROM lncalendar.schedule WHERE id = :id",
+        {"id": schedule_id},
     )
     return Schedule(**row) if row else None
 
@@ -74,55 +55,51 @@ async def get_schedules(wallet_ids: Union[str, list[str]]) -> list[Schedule]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
 
-    q = ",".join(["?"] * len(wallet_ids))
-    rows = await db.fetchall(
-        f"SELECT * FROM lncalendar.schedule WHERE wallet IN ({q})", (*wallet_ids,)
-    )
+    q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
+    rows = await db.fetchall(f"SELECT * FROM lncalendar.schedule WHERE wallet IN ({q})")
 
     return [Schedule(**row) for row in rows]
 
 
 async def delete_schedule(schedule_id: str) -> None:
-    await db.execute("DELETE FROM lncalendar.schedule WHERE id = ?", (schedule_id,))
+    await db.execute(
+        "DELETE FROM lncalendar.schedule WHERE id = :id", {"id": schedule_id}
+    )
 
 
-## Appointment CRUD
 async def create_appointment(
     schedule_id: str, payment_hash: str, data: CreateAppointment
 ) -> Appointment:
     appointment_id = payment_hash
-    await db.execute(
-        """
-        INSERT INTO lncalendar.appointment
-        (id, name, email, info, start_time, end_time, schedule)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            appointment_id,
-            data.name,
-            data.email,
-            data.info,
-            data.start_time,
-            data.end_time,
-            schedule_id,
-        ),
+    appointment = Appointment(
+        id=appointment_id,
+        name=data.name,
+        email=data.email,
+        info=data.info,
+        start_time=data.start_time,
+        end_time=data.end_time,
+        schedule=schedule_id,
+        paid=False,
     )
-    appointment = await get_appointment(appointment_id)
-    assert appointment, "Newly created appointment couldn't be retrieved"
+    await db.execute(
+        insert_query("lncalendar.appointment", appointment),
+        appointment.dict(),
+    )
     return appointment
 
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
     row = await db.fetchone(
-        "SELECT * FROM lncalendar.appointment WHERE id = ?", (appointment_id,)
+        "SELECT * FROM lncalendar.appointment WHERE id = :id",
+        {"id": appointment_id},
     )
     return Appointment(**row) if row else None
 
 
 async def get_appointments(schedule_id: str) -> list[Appointment]:
-    print(schedule_id)
     rows = await db.fetchall(
-        "SELECT * FROM lncalendar.appointment WHERE schedule = ?", (schedule_id,)
+        "SELECT * FROM lncalendar.appointment WHERE schedule = :schedule",
+        {"schedule": schedule_id},
     )
     return [Appointment(**row) for row in rows]
 
@@ -139,68 +116,65 @@ async def get_appointments_wallets(
 
     schedule_ids = [schedule.id for schedule in schedules]
 
-    q = ",".join(["?"] * len(schedules))
+    q = ",".join([f"'{schedule_id}'" for schedule_id in schedule_ids])
     rows = await db.fetchall(
-        f"SELECT * FROM lncalendar.appointment WHERE schedule IN ({q})",
-        (*schedule_ids,),
+        f"SELECT * FROM lncalendar.appointment WHERE schedule IN ({q})"
     )
     return [Appointment(**row) for row in rows]
 
 
 async def set_appointment_paid(appointment_id: str) -> None:
     await db.execute(
-        """
-        UPDATE lncalendar.appointment SET paid = true
-        WHERE id = ?
-        """,
-        (appointment_id,),
+        "UPDATE lncalendar.appointment SET paid = true WHERE id = :id",
+        {"id": appointment_id},
     )
 
 
 async def purge_appointments(schedule_id: str) -> None:
     time_diff = datetime.now() - timedelta(hours=24)
+    tsph = db.timestamp_placeholder("diff")
     await db.execute(
         f"""
         DELETE FROM lncalendar.appointment
-        WHERE schedule = ? AND paid = false AND time < {db.timestamp_placeholder}
+        WHERE schedule = :schedule AND paid = false AND time < {tsph}
         """,
-        (
-            schedule_id,
-            time_diff.timestamp(),
-        ),
+        {"schedule": schedule_id, "diff": time_diff.timestamp()},
     )
 
 
 ## UnavailableTime CRUD
 async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTime:
     unavailable_time_id = urlsafe_short_hash()
-    await db.execute(
-        """
-        INSERT INTO lncalendar.unavailable (id, start_time, end_time, schedule)
-        VALUES (?, ?, ?, ?)
-        """,
-        (unavailable_time_id, data.start_time, data.end_time, data.schedule),
+    unavailable_time = UnavailableTime(
+        id=unavailable_time_id,
+        start_time=data.start_time,
+        end_time=data.end_time or data.start_time,
+        schedule=data.schedule,
     )
-    unavailable_time = await get_unavailable_time(unavailable_time_id)
-    assert unavailable_time, "Newly created unavailable_time couldn't be retrieved"
+    await db.execute(
+        insert_query("lncalendar.unavailable", unavailable_time),
+        unavailable_time.dict(),
+    )
     return unavailable_time
 
 
 async def get_unavailable_time(unavailable_time_id: str) -> Optional[UnavailableTime]:
     row = await db.fetchone(
-        "SELECT * FROM lncalendar.unavailable WHERE id = ?", (unavailable_time_id,)
+        "SELECT * FROM lncalendar.unavailable WHERE id = :id",
+        {"id": unavailable_time_id},
     )
     return UnavailableTime(**row) if row else None
 
 
 async def get_unavailable_times(schedule_id: str) -> list[UnavailableTime]:
     rows = await db.fetchall(
-        "SELECT * FROM lncalendar.unavailable WHERE schedule = ?", (schedule_id,)
+        "SELECT * FROM lncalendar.unavailable WHERE schedule = :schedule",
+        {"schedule": schedule_id},
     )
     return [UnavailableTime(**row) for row in rows]
 
 
 async def delete_unavailable_time(unavailable_time_id: str) -> None:
     await db.execute(
-        "DELETE FROM lncalendar.unavailable WHERE id = ?", (unavailable_time_id,)
+        "DELETE FROM lncalendar.unavailable WHERE id = :id", {"id": unavailable_time_id}
     )

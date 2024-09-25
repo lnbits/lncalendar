@@ -5,7 +5,7 @@ const mapSchedule = obj => {
 
 const mapAppointment = obj => {
   let [date, time] = obj.start_time.split(' ')
-  obj.date = Quasar.utils.date.formatDate(date, 'YYYY/MM/DD')
+  obj.date = Quasar.date.formatDate(date, 'YYYY/MM/DD')
   obj.time = time
   return obj
 }
@@ -21,7 +21,7 @@ const extractUnavailableDates = arr => {
       date <= endDate;
       date.setDate(date.getDate() + 1)
     ) {
-      unavailableSet.add(Quasar.utils.date.formatDate(date, 'YYYY/MM/DD'))
+      unavailableSet.add(Quasar.date.formatDate(date, 'YYYY/MM/DD'))
     }
   })
   return unavailableSet
@@ -46,7 +46,7 @@ const add30min = time => {
 const timeFormat = eventInfo => {
   if (!eventInfo) return null
   let [date, time] = eventInfo.start_time.split(' ')
-  let formattedDate = Quasar.utils.date.formatDate(
+  let formattedDate = Quasar.date.formatDate(
     new Date(date),
     'ddd, Do MMM, YYYY'
   )
@@ -57,23 +57,4 @@ const timeFormat = eventInfo => {
     time: time,
     fromNow: `${isPass ? '' : 'Starts'} ${m.fromNow()}`
   }
-}
-
-function loadTemplateAsync(path) {
-  const result = new Promise(resolve => {
-    const xhttp = new XMLHttpRequest()
-
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4) {
-        if (this.status == 200) resolve(this.responseText)
-
-        if (this.status == 404) resolve(`<div>Page not found: ${path}</div>`)
-      }
-    }
-
-    xhttp.open('GET', path, true)
-    xhttp.send()
-  })
-
-  return result
 }

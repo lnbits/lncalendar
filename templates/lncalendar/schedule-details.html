@@ -36,9 +36,15 @@
                 >
                   <q-card>
                     <q-card-section class="text-caption">
-                      <p>${event.info || 'No description'}</p>
-                      <p class="q-mt-lg">${timeFormatted(event).fromNow}</p>
-                      <p v-if="event.email">Contact: ${event.email}</p>
+                      <p v-text="event.info || 'No description'"></p>
+                      <p
+                        class="q-mt-lg"
+                        v-text="timeFormatted(event).fromNow"
+                      ></p>
+                      <p
+                        v-if="event.email"
+                        v-text="'Contact: '+event.email"
+                      ></p>
                     </q-card-section>
                   </q-card>
                 </q-expansion-item>
@@ -63,9 +69,10 @@
           ></q-date>
           <div class="q-mt-lg">
             <p>
-              <span v-if="dateRange"
-                >Set unavailable from ${dateRange.from} to ${dateRange.to}</span
-              >
+              <span
+                v-if="dateRange"
+                v-text="textSetUnavailable(dateRange)"
+              ></span>
               <span v-else>Select a date range to be unavailable</span>
             </p>
             <q-btn
@@ -82,13 +89,13 @@
         <p class="h6">Select days off</p>
         <div class="q-pa-md">
           <q-table
-            title="Treats"
-            :data="unavailableDatesBlocks"
+            title="Availability"
+            :rows="unavailableDatesBlocks"
             :columns="unavailableTable.columns"
             row-key="id"
             selection="single"
-            :selected.sync="selectedBlock"
-            :pagination.sync="unavailableTable.pagination"
+            v-model:selected="selectedBlock"
+            v-model:pagination="unavailableTable.pagination"
           ></q-table>
           <div class="q-mt-lg">
             <q-btn
