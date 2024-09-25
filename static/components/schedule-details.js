@@ -42,6 +42,13 @@ window.app.component('schedule-details', {
   computed: {},
 
   methods: {
+    textSetUnavailable(dateRange) {
+      const range =
+        typeof dateRange === 'string'
+          ? dateRange
+          : `from ${dateRange.from} to ${dateRange.to}`
+      return `Set unavailable ${range}`
+    },
     timeFormatted(eventInfo) {
       if (!eventInfo) return null
       let [date, time] = eventInfo.start_time.split(' ')
@@ -96,6 +103,13 @@ window.app.component('schedule-details', {
     async setUnavailableDates() {
       const schedule = this.schedule.id
       try {
+        // dateRange is a string if only 1 day is selected
+        if (typeof this.dateRange === 'string') {
+          this.dateRange = {
+            from: this.dateRange,
+            to: this.dateRange
+          }
+        }
         const unavailable = await LNbits.api.request(
           'POST',
           `/lncalendar/api/v1/unavailable`,

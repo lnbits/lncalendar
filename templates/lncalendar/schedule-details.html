@@ -71,7 +71,7 @@
             <p>
               <span
                 v-if="dateRange"
-                v-text="'Set unavailable from '+dateRange.from+' to '+dateRange.to"
+                v-text="textSetUnavailable(dateRange)"
               ></span>
               <span v-else>Select a date range to be unavailable</span>
             </p>
