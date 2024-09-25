@@ -26,7 +26,7 @@
           :rows="schedules"
           row-key="id"
           :columns="schedulesTable.columns"
-          :pagination.sync="schedulesTable.pagination"
+          v-model:pagination="schedulesTable.pagination"
         >
           {% raw %}
           <template v-slot:header="props">
@@ -108,7 +108,7 @@
           :rows="appointments"
           row-key="id"
           :columns="appointmentsTable.columns"
-          :pagination.sync="appointmentsTable.pagination"
+          v-model:pagination="appointmentsTable.pagination"
         >
           {% raw %}
           <template v-slot:header="props">

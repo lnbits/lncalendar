@@ -94,8 +94,8 @@
             :columns="unavailableTable.columns"
             row-key="id"
             selection="single"
-            :selected.sync="selectedBlock"
-            :pagination.sync="unavailableTable.pagination"
+            v-model:selected="selectedBlock"
+            v-model:pagination="unavailableTable.pagination"
           ></q-table>
           <div class="q-mt-lg">
             <q-btn
