@@ -71,6 +71,7 @@ async def create_appointment(
         id=appointment_id,
         name=data.name,
         email=data.email,
+        nostr_pubkey=data.nostr_pubkey,
         info=data.info,
         start_time=data.start_time,
         end_time=data.end_time,
