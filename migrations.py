@@ -69,3 +69,27 @@ async def m002_rename_time_to_created_at(db):
         RENAME COLUMN time TO created_at;
         """
     )
+
+
+async def m003_add_unavailable_name(db):
+    """
+    Add name to the unavailable table.
+    """
+    await db.execute(
+        """
+        ALTER TABLE lncalendar.unavailable
+        ADD COLUMN name TEXT NOT NULL DEFAULT 'Unavailable';
+        """
+    )
+
+
+async def m004_add_timeslot(db):
+    """
+    Add timeslot to the schedule table.
+    """
+    await db.execute(
+        """
+        ALTER TABLE lncalendar.schedule
+        ADD COLUMN timeslot INTEGER NOT NULL DEFAULT 30;
+        """
+    )
