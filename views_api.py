@@ -138,7 +138,6 @@ async def api_appointment_create(data: CreateAppointment):
         await create_appointment(
             schedule_id=data.schedule, payment_hash=payment_hash, data=data
         )
-        print(payment_hash, payment_request)
     except Exception as exc:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)

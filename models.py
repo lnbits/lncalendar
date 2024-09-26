@@ -26,6 +26,7 @@ class CreateUnavailableTime(BaseModel):
 class CreateAppointment(BaseModel):
     name: str = Query(...)
     email: str = Query(None)
+    nostr_pubkey: str = Query(None)
     info: str = Query(None)
     start_time: str = Query(...)
     end_time: str = Query(...)
@@ -61,6 +62,7 @@ class Appointment(BaseModel):
     id: str
     name: str
     email: Optional[str]
+    nostr_pubkey: Optional[str]
     info: Optional[str]
     start_time: str
     end_time: str

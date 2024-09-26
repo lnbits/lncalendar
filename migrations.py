@@ -93,3 +93,15 @@ async def m004_add_timeslot(db):
         ADD COLUMN timeslot INTEGER NOT NULL DEFAULT 30;
         """
     )
+
+
+async def m005_add_nostr_pubkey(db):
+    """
+    Add nostr_pubkey to the appointment table.
+    """
+    await db.execute(
+        """
+        ALTER TABLE lncalendar.appointment
+        ADD COLUMN nostr_pubkey TEXT;
+        """
+    )
