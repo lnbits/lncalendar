@@ -131,7 +131,7 @@ async def purge_appointments(schedule_id: str) -> None:
     await db.execute(
         f"""
         DELETE FROM lncalendar.appointment
-        WHERE schedule = :schedule AND paid = false AND time < {tsph}
+        WHERE schedule = :schedule AND paid = false AND created_at < {tsph}
         """,
         {"schedule": schedule_id, "diff": time_diff.timestamp()},
     )
