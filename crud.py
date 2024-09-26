@@ -18,6 +18,8 @@ db = Database("ext_lncalendar")
 
 async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
     schedule_id = urlsafe_short_hash()
+    # hardcode timeslot for now
+    timeslot = 30
     schedule = Schedule(
         id=schedule_id,
         wallet=wallet_id,
@@ -27,6 +29,7 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         start_time=data.start_time,
         end_time=data.end_time,
         amount=data.amount,
+        timeslot=timeslot,
     )
     await db.insert("lncalendar.schedule", schedule)
     return schedule
@@ -96,7 +99,7 @@ async def get_appointments(schedule_id: str) -> list[Appointment]:
 
 
 async def get_appointments_wallets(
-    wallet_ids: Union[str, list[str]]
+    wallet_ids: Union[str, list[str]],
 ) -> list[Appointment]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
@@ -133,11 +136,18 @@ async def purge_appointments(schedule_id: str) -> None:
     )
 
 
+async def delete_appointment(appointment_id: str) -> None:
+    await db.execute(
+        "DELETE FROM lncalendar.appointment WHERE id = :id", {"id": appointment_id}
+    )
+
+
 ## UnavailableTime CRUD
 async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTime:
     unavailable_time_id = urlsafe_short_hash()
     unavailable_time = UnavailableTime(
         id=unavailable_time_id,
+        name=data.name or "",
         start_time=data.start_time,
         end_time=data.end_time or data.start_time,
         schedule=data.schedule,

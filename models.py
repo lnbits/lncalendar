@@ -13,12 +13,14 @@ class CreateSchedule(BaseModel):
     start_time: str = Query(...)
     end_time: str = Query(...)
     amount: int = Query(..., ge=1)
+    timeslot: int = Query(..., ge=15)
 
 
 class CreateUnavailableTime(BaseModel):
     start_time: str = Query(...)
     end_time: Optional[str] = Query(None)
     schedule: str = Query(...)
+    name: Optional[str] = Query(None)
 
 
 class CreateAppointment(BaseModel):
@@ -39,6 +41,7 @@ class Schedule(BaseModel):
     start_time: str
     end_time: str
     amount: int
+    timeslot: int
 
     @property
     def availabe_days(self):
@@ -47,6 +50,7 @@ class Schedule(BaseModel):
 
 class UnavailableTime(BaseModel):
     id: str
+    name: str
     start_time: str
     end_time: str
     schedule: str
