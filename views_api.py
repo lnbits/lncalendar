@@ -56,7 +56,7 @@ async def api_schedule_create(
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your wallet.")
 
     schedule = await create_schedule(wallet_id=data.wallet, data=data)
-    return schedule.dict()
+    return {**schedule.dict(), "available_days": schedule.availabe_days}
 
 
 @lncalendar_api_router.put("/api/v1/schedule/{schedule_id}")
@@ -92,7 +92,7 @@ async def api_schedule_update(
 
 @lncalendar_api_router.delete("/api/v1/schedule/{schedule_id}")
 async def api_schedule_delete(
-    schedule_id: str, wallet: WalletTypeInfo = Depends(require_admin_key)
+    schedule_id: str, user: User = Depends(check_user_exists),
 ):
     schedule = await get_schedule(schedule_id)
 
@@ -101,7 +101,7 @@ async def api_schedule_delete(
             status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
         )
 
-    if schedule.wallet != wallet.wallet.id:
+    if schedule.wallet not in user.wallet_ids:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
         )
