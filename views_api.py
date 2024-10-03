@@ -2,13 +2,17 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.exceptions import HTTPException
-from httpx import delete
 
-from lnbits import app
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.models import User, WalletTypeInfo
 from lnbits.core.services import create_invoice
 from lnbits.decorators import check_user_exists, require_admin_key, require_invoice_key
+from lnbits.utils.exchange_rates import (
+    allowed_currencies,
+    fiat_amount_as_satoshis,
+    get_fiat_rate_satoshis,
+    satoshis_amount_as_fiat,
+)
 
 from .crud import (
     create_appointment,
@@ -25,9 +29,15 @@ from .crud import (
     get_unavailable_times,
     purge_appointments,
     set_appointment_paid,
+    update_appointment,
     update_schedule,
 )
-from .models import CreateAppointment, CreateSchedule, CreateUnavailableTime
+from .models import (
+    CreateAppointment,
+    CreateSchedule,
+    CreateUnavailableTime,
+    UpdateAppointment,
+)
 
 lncalendar_api_router = APIRouter()
 
@@ -131,7 +141,7 @@ async def api_appointment_create(data: CreateAppointment):
     try:
         payment = await create_invoice(
             wallet_id=schedule.wallet,
-            amount=schedule.amount,  # type: ignore
+            amount=amount,  # type: ignore
             memo=f"{schedule.name}",
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
@@ -144,6 +154,34 @@ async def api_appointment_create(data: CreateAppointment):
         ) from exc
     return {"payment_hash": payment.payment_hash, "payment_request": payment.bolt11}
 
+
+@lncalendar_api_router.put("/api/v1/appointment/{appointment_id}")
+async def api_appointment_update(
+    appointment_id: str,
+    data: UpdateAppointment,
+    user: User = Depends(check_user_exists),
+):
+    appointment = await get_appointment(appointment_id)
+    if not appointment:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Appointment does not exist."
+        )
+    schedule = await get_schedule(appointment.schedule)
+    if not schedule:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
+        )
+    if schedule.wallet not in user.wallet_ids:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
+        )
+    
+    for k, v in data.dict().items():
+        if v is not None:
+            setattr(appointment, k, v)
+
+    appointment = await update_appointment(appointment)
+    return appointment.dict()
 
 @lncalendar_api_router.get("/api/v1/appointment/purge/{schedule_id}")
 async def api_purge_appointments(schedule_id: str):
@@ -258,3 +296,8 @@ async def api_unavailable_delete(
         )
     await delete_unavailable_time(unavailable_id)
     return "", HTTPStatus.NO_CONTENT
+
+## Currency API
+@lncalendar_api_router.get("/api/v1/currencies")
+async def api_get_currencies():
+    return allowed_currencies()

@@ -18,8 +18,7 @@ db = Database("ext_lncalendar")
 
 async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
     schedule_id = urlsafe_short_hash()
-    # hardcode timeslot for now
-    timeslot = 30
+    
     schedule = Schedule(
         id=schedule_id,
         wallet=wallet_id,
@@ -29,7 +28,8 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         start_time=data.start_time,
         end_time=data.end_time,
         amount=data.amount,
-        timeslot=timeslot,
+        timeslot=data.timeslot,
+        currency=data.currency,
     )
     await db.insert("lncalendar.schedule", schedule)
     return schedule
@@ -82,6 +82,12 @@ async def create_appointment(
     await db.insert("lncalendar.appointment", appointment)
     return appointment
 
+async def update_appointment(appointment: Appointment) -> Appointment:
+    await db.execute(
+        update_query("lncalendar.appointment", appointment),
+        appointment.dict(),
+    )
+    return appointment
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
     return await db.fetchone(
