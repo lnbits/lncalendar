@@ -5,6 +5,7 @@ from loguru import logger
 from lnbits.core.models import Payment
 from lnbits.helpers import get_current_extension_name
 from lnbits.tasks import register_invoice_listener
+from lnbits.utils.exchange_rates import fiat_amount_as_satoshis
 
 from .crud import get_appointment, get_schedule, set_appointment_paid
 
@@ -30,5 +31,14 @@ async def on_invoice_paid(payment: Payment) -> None:
     schedule = await get_schedule(appointment.schedule)
     assert schedule
 
-    if payment.amount == schedule.amount * 1000:
+    price = (
+        schedule.amount * 1000
+        if schedule.currency == "sat"
+        else await fiat_amount_as_satoshis(schedule.amount, schedule.currency)
+        * 1000
+    )
+
+    lower_bound = price * 0.99  # 1% decrease
+
+    if abs(payment.amount) >= lower_bound:  # allow 1% error
         await set_appointment_paid(payment.payment_hash)

@@ -12,8 +12,9 @@ class CreateSchedule(BaseModel):
     end_day: int = Query(..., ge=0, le=6)
     start_time: str = Query(...)
     end_time: str = Query(...)
-    amount: int = Query(..., ge=1)
-    timeslot: int = Query(..., ge=15)
+    amount: float = Query(..., ge=0)
+    timeslot: int = Query(30, ge=5)
+    currency: str = Query('sat')
 
 
 class CreateUnavailableTime(BaseModel):
@@ -32,6 +33,15 @@ class CreateAppointment(BaseModel):
     end_time: str = Query(...)
     schedule: str = Query(...)
 
+class UpdateAppointment(BaseModel):
+    name: Optional[str] = Query(None)
+    email: Optional[str] = Query(None)
+    nostr_pubkey: Optional[str] = Query(None)
+    info: Optional[str] = Query(None)
+    start_time: Optional[str] = Query(None)
+    end_time: Optional[str] = Query(None)
+    schedule: Optional[str] = Query(None)
+
 
 class Schedule(BaseModel):
     id: str
@@ -41,8 +51,9 @@ class Schedule(BaseModel):
     end_day: int
     start_time: str
     end_time: str
-    amount: int
+    amount: float
     timeslot: int
+    currency: str
 
     @property
     def availabe_days(self):

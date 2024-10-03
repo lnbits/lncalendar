@@ -1,3 +1,8 @@
+from sqlalchemy.exc import OperationalError
+
+from lnbits.helpers import insert_query
+
+
 async def m001_initial(db):
     """
     Initial schedules table.
@@ -70,8 +75,6 @@ async def m002_rename_time_to_created_at(db):
         """
     )
 
-
-async def m003_add_unavailable_name(db):
     """
     Add name to the unavailable table.
     """
@@ -82,8 +85,6 @@ async def m003_add_unavailable_name(db):
         """
     )
 
-
-async def m004_add_timeslot(db):
     """
     Add timeslot to the schedule table.
     """
@@ -94,8 +95,6 @@ async def m004_add_timeslot(db):
         """
     )
 
-
-async def m005_add_nostr_pubkey(db):
     """
     Add nostr_pubkey to the appointment table.
     """
@@ -105,3 +104,40 @@ async def m005_add_nostr_pubkey(db):
         ADD COLUMN nostr_pubkey TEXT;
         """
     )
+
+
+async def m003_add_fiat_currency(db):
+    """
+    Add currency to schedule to allow fiat denomination
+    of appointments. Make price a float.
+    """
+    try:
+        await db.execute(
+            "ALTER TABLE lncalendar.schedule RENAME TO schedule_backup;")
+        await db.execute(
+            """
+            CREATE TABLE lncalendar.schedule (
+                id TEXT PRIMARY KEY,
+                wallet TEXT NOT NULL,
+                name TEXT NOT NULL,
+                start_day INTEGER NOT NULL,
+                end_day INTEGER NOT NULL,
+                start_time TEXT NOT NULL,
+                end_time TEXT NOT NULL,
+                amount FLOAT NOT NULL,
+                timeslot INTEGER NOT NULL DEFAULT 30,
+                currency TEXT NOT NULL DEFAULT 'sat'
+            );
+        """
+        )
+
+        await db.execute(
+            """
+            INSERT INTO lncalendar.schedule (id, wallet, name, start_day, end_day, start_time, end_time, amount, timeslot) 
+            SELECT id, wallet, name, start_day, end_day, start_time, end_time, amount, timeslot FROM lncalendar.schedule_backup;
+            """
+        )
+
+        await db.execute("DROP TABLE lncalendar.schedule_backup;")
+    except OperationalError:
+        pass
