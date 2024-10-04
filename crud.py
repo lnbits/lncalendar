@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Union
 
 from lnbits.db import Database
-from lnbits.helpers import insert_query, update_query, urlsafe_short_hash
+from lnbits.helpers import urlsafe_short_hash
 
 from .models import (
     Appointment,
@@ -31,18 +31,12 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         timeslot=data.timeslot,
         currency=data.currency,
     )
-    await db.execute(
-        insert_query("lncalendar.schedule", schedule),
-        schedule.dict(),
-    )
+    await db.insert("lncalendar.schedule", schedule)
     return schedule
 
 
 async def update_schedule(schedule: Schedule) -> Schedule:
-    await db.execute(
-        update_query("lncalendar.schedule", schedule),
-        schedule.dict(),
-    )
+    await db.update("lncalendar.schedule", schedule)
     return schedule
 
 
@@ -86,17 +80,11 @@ async def create_appointment(
         paid=False,
         created_at=datetime.now(),
     )
-    await db.execute(
-        insert_query("lncalendar.appointment", appointment),
-        appointment.dict(),
-    )
+    await db.insert("lncalendar.appointment", appointment)
     return appointment
 
 async def update_appointment(appointment: Appointment) -> Appointment:
-    await db.execute(
-        update_query("lncalendar.appointment", appointment),
-        appointment.dict(),
-    )
+    await db.update("lncalendar.appointment", appointment)
     return appointment
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
@@ -170,10 +158,7 @@ async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTim
         schedule=data.schedule,
         created_at=datetime.now(),
     )
-    await db.execute(
-        insert_query("lncalendar.unavailable", unavailable_time),
-        unavailable_time.dict(),
-    )
+    await db.insert("lncalendar.unavailable", unavailable_time)
     return unavailable_time
 
 
