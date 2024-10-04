@@ -83,10 +83,7 @@ async def create_appointment(
     return appointment
 
 async def update_appointment(appointment: Appointment) -> Appointment:
-    await db.execute(
-        update_query("lncalendar.appointment", appointment),
-        appointment.dict(),
-    )
+    await db.update("lncalendar.appointment", appointment)
     return appointment
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
