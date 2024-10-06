@@ -6,15 +6,38 @@ from lnbits.helpers import urlsafe_short_hash
 
 from .models import (
     Appointment,
+    CalendarSettings,
     CreateAppointment,
     CreateSchedule,
     CreateUnavailableTime,
     Schedule,
     UnavailableTime,
 )
+from .nostr.key import PrivateKey
 
 db = Database("ext_lncalendar")
 
+async def get_or_create_calendar_settings() -> CalendarSettings:
+    settings = await db.fetchone(
+        "SELECT * FROM lncalendar.settings LIMIT 1",
+        model=CalendarSettings,  # type: ignore
+    )
+    if settings:
+        return settings
+    else:
+        settings = CalendarSettings(
+            nostr_private_key=PrivateKey().hex(),
+            relays=[]
+        )
+        await db.insert("lncalendar.settings", settings)  # type: ignore
+        return settings
+
+async def update_calendar_settings(settings: CalendarSettings) -> CalendarSettings:
+    await db.update("lncalendar.settings", settings, "")
+    return settings
+
+async def delete_calendar_settings() -> None:
+    await db.execute("DELETE FROM lncalendar.settings")
 
 async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
     schedule_id = urlsafe_short_hash()

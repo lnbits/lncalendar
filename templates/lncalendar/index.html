@@ -7,6 +7,11 @@
         <q-btn unelevated color="primary" @click="formDialog.show = true"
           >New schedule</q-btn
         >
+        <lnbits-extension-settings-btn-dialog
+          v-if="this.g.user.admin"
+          :endpoint="endpoint"
+          :options="settings"
+        />
       </q-card-section>
     </q-card>
 

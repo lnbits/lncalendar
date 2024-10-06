@@ -1,7 +1,5 @@
 from sqlalchemy.exc import OperationalError
 
-from lnbits.helpers import insert_query
-
 
 async def m001_initial(db):
     """
@@ -141,3 +139,16 @@ async def m003_add_fiat_currency(db):
         await db.execute("DROP TABLE lncalendar.schedule_backup;")
     except OperationalError:
         pass
+
+async def m004_add_lncalendar_settings(db):
+    """
+    Add settings table to store global settings.
+    """
+    await db.execute(
+        """
+        CREATE TABLE lncalendar.settings (
+            nostr_private_key TEXT NOT NULL,
+            relays TEXT
+        );
+    """
+    )
