@@ -6,7 +6,12 @@ from fastapi.exceptions import HTTPException
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.models import User, WalletTypeInfo
 from lnbits.core.services import create_invoice
-from lnbits.decorators import check_user_exists, require_admin_key, require_invoice_key
+from lnbits.decorators import (
+    check_admin,
+    check_user_exists,
+    require_admin_key,
+    require_invoice_key,
+)
 from lnbits.utils.exchange_rates import (
     allowed_currencies,
     fiat_amount_as_satoshis,
@@ -19,20 +24,25 @@ from .crud import (
     create_schedule,
     create_unavailable_time,
     delete_appointment,
+    delete_calendar_settings,
     delete_schedule,
     delete_unavailable_time,
     get_appointment,
     get_appointments,
     get_appointments_wallets,
+    get_or_create_calendar_settings,
     get_schedule,
     get_schedules,
     get_unavailable_times,
     purge_appointments,
     set_appointment_paid,
     update_appointment,
+    update_calendar_settings,
     update_schedule,
 )
+from .helpers import parse_nostr_private_key
 from .models import (
+    CalendarSettings,
     CreateAppointment,
     CreateSchedule,
     CreateUnavailableTime,
@@ -301,3 +311,22 @@ async def api_unavailable_delete(
 @lncalendar_api_router.get("/api/v1/currencies")
 async def api_get_currencies():
     return allowed_currencies()
+
+## SETTINGS
+@lncalendar_api_router.get("/api/v1/settings", dependencies=[Depends(check_admin)])
+async def api_get_settings() -> CalendarSettings:
+    return await get_or_create_calendar_settings()
+
+@lncalendar_api_router.put("/api/v1/settings", dependencies=[Depends(check_admin)])
+async def api_update_settings(settings: CalendarSettings) -> CalendarSettings:
+    try:
+        parse_nostr_private_key(settings.nostr_private_key)
+    except Exception as exc:
+        raise HTTPException(
+            detail="Invalid Nostr private key.", status_code=HTTPStatus.BAD_REQUEST
+        ) from exc
+    return await update_calendar_settings(settings)
+
+@lncalendar_api_router.delete("/api/v1/settings", dependencies=[Depends(check_admin)])
+async def api_delete_settings() -> None:
+    await delete_calendar_settings()

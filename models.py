@@ -1,8 +1,25 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import Query
 from pydantic import BaseModel
+
+from .helpers import parse_nostr_private_key
+from .nostr.key import PrivateKey
+
+
+class CalendarSettings(BaseModel):
+    nostr_private_key: str
+    relays: List[str] = []
+
+    @property
+    def private_key(self) -> PrivateKey:
+        return parse_nostr_private_key(self.nostr_private_key)
+
+    @property
+    def public_key(self) -> str:
+        return self.private_key.public_key.hex()
+
 
 
 class CreateSchedule(BaseModel):
