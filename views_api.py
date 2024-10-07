@@ -40,7 +40,7 @@ from .crud import (
     update_calendar_settings,
     update_schedule,
 )
-from .helpers import parse_nostr_private_key
+from .helpers import normalize_public_key, parse_nostr_private_key
 from .models import (
     CalendarSettings,
     CreateAppointment,
@@ -48,6 +48,7 @@ from .models import (
     CreateUnavailableTime,
     UpdateAppointment,
 )
+from .services import nostr_send_msg
 
 lncalendar_api_router = APIRouter()
 
@@ -191,6 +192,17 @@ async def api_appointment_update(
             setattr(appointment, k, v)
 
     appointment = await update_appointment(appointment)
+
+    # Notify client that the appointment has been updated
+    if appointment.nostr_pubkey:
+        pubkey = normalize_public_key(appointment.nostr_pubkey)
+        msg = f"""
+        [DO NOT REPLY TO THIS MESSAGE]
+
+        The appointment for {schedule.name} has been updated.
+        New date: {appointment.start_time}
+        """
+        await nostr_send_msg(pubkey, msg)
     return appointment.dict()
 
 @lncalendar_api_router.get("/api/v1/appointment/purge/{schedule_id}")
@@ -257,6 +269,16 @@ async def api_appointment_delete(
             status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
         )
     await delete_appointment(appointment_id)
+
+    # Notify client that the appointment has been deleted
+    if appointment.nostr_pubkey:
+        pubkey = normalize_public_key(appointment.nostr_pubkey)
+        msg = f"""
+        [DO NOT REPLY TO THIS MESSAGE]
+
+        The appointment for {schedule.name} has been deleted.
+        """
+        await nostr_send_msg(pubkey, msg)
     return "", HTTPStatus.NO_CONTENT
 
 

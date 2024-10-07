@@ -152,3 +152,14 @@ async def m004_add_lncalendar_settings(db):
         );
     """
     )
+
+async def m005_add_public_key(db):
+    """
+    Add public_key to schedule table.
+    """
+    await db.execute(
+        """
+        ALTER TABLE lncalendar.schedule
+        ADD COLUMN public_key TEXT;
+        """
+    )

@@ -52,6 +52,7 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         amount=data.amount,
         timeslot=data.timeslot,
         currency=data.currency,
+        public_key=data.public_key,
     )
     await db.insert("lncalendar.schedule", schedule)
     return schedule
@@ -105,7 +106,7 @@ async def create_appointment(
     return appointment
 
 async def update_appointment(appointment: Appointment) -> Appointment:
-    await db.update("lncalendar.appointment", appointment)
+    await db.update("lncalendar.appointment", appointment, "")
     return appointment
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
