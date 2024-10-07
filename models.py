@@ -10,7 +10,11 @@ from .nostr.key import PrivateKey
 
 class CalendarSettings(BaseModel):
     nostr_private_key: str
-    relays: List[str] = []
+    relays: str = ""
+
+    @property
+    def relays_list(self) -> List[str]:
+        return self.relays.split(',')
 
     @property
     def private_key(self) -> PrivateKey:
