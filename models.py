@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import Query
 from pydantic import BaseModel
 
-from .helpers import parse_nostr_private_key
+from .helpers import normalize_public_key, parse_nostr_private_key
 from .nostr.key import PrivateKey
 
 
@@ -22,7 +22,7 @@ class CalendarSettings(BaseModel):
 
     @property
     def public_key(self) -> str:
-        return self.private_key.public_key.hex()
+        return P
 
 
 
@@ -36,6 +36,7 @@ class CreateSchedule(BaseModel):
     amount: float = Query(..., ge=0)
     timeslot: int = Query(30, ge=5)
     currency: str = Query('sat')
+    public_key: Optional[str] = Query(None)
 
 
 class CreateUnavailableTime(BaseModel):
@@ -75,10 +76,17 @@ class Schedule(BaseModel):
     amount: float
     timeslot: int
     currency: str
+    public_key: Optional[str]
 
     @property
     def availabe_days(self):
         return list(range(self.start_day, self.end_day + 1))
+    
+    @property
+    def pubkey_hex(self):
+        if self.public_key:
+            return normalize_public_key(self.public_key)
+        return None
 
 
 class UnavailableTime(BaseModel):

@@ -15,7 +15,7 @@ window.app = Vue.createApp({
           name: 'nostr_private_key'
         },
         {
-          type: 'str',
+          type: 'chips',
           description: 'Comma seperated list of relays',
           name: 'relays'
         },

@@ -8,6 +8,8 @@ from lnbits.tasks import register_invoice_listener
 from lnbits.utils.exchange_rates import fiat_amount_as_satoshis
 
 from .crud import get_appointment, get_schedule, set_appointment_paid
+from .helpers import normalize_public_key
+from .services import nostr_send_msg
 
 
 async def wait_for_paid_invoices():
@@ -42,3 +44,31 @@ async def on_invoice_paid(payment: Payment) -> None:
 
     if abs(payment.amount) >= lower_bound:  # allow 1% error
         await set_appointment_paid(payment.payment_hash)
+        if schedule.public_key:
+            # notify the user that the appointment has been paid
+            pubkey = schedule.pubkey_hex
+            assert pubkey
+
+            msg = f"""
+            [DO NOT REPLY TO THIS MESSAGE]
+
+            An appointment with {appointment.name} has been booked and paid for.
+
+            Date: {appointment.start_time}
+            Nostr contact: {appointment.nostr_pubkey}
+            """
+            await nostr_send_msg(pubkey, msg)
+
+        if appointment.nostr_pubkey:
+            #notify client that the appointment has been paid
+            pubkey = normalize_public_key(appointment.nostr_pubkey)
+            msg = f"""
+            [DO NOT REPLY TO THIS MESSAGE]
+
+            The appointment for {schedule.name} is booked.
+
+            Date: {appointment.start_time}
+            Nostr contact: {schedule.public_key}
+            """
+            await nostr_send_msg(pubkey, msg)
+
