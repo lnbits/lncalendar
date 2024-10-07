@@ -13,7 +13,12 @@ window.app = Vue.createApp({
           type: 'str',
           description: 'Nostr private key used for notifications',
           name: 'nostr_private_key'
-        }
+        },
+        {
+          type: 'str',
+          description: 'Comma seperated list of relays',
+          name: 'relays'
+        },
       ],
       schedules: [],
       schedulesTable: {

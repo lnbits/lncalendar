@@ -27,7 +27,6 @@ async def get_or_create_calendar_settings() -> CalendarSettings:
     else:
         settings = CalendarSettings(
             nostr_private_key=PrivateKey().hex(),
-            relays=[]
         )
         await db.insert("lncalendar.settings", settings)  # type: ignore
         return settings
