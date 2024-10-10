@@ -15,8 +15,6 @@ from lnbits.decorators import (
 from lnbits.utils.exchange_rates import (
     allowed_currencies,
     fiat_amount_as_satoshis,
-    get_fiat_rate_satoshis,
-    satoshis_amount_as_fiat,
 )
 
 from .crud import (
