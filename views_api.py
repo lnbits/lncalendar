@@ -154,6 +154,7 @@ async def api_appointment_create(data: CreateAppointment):
             memo=f"{schedule.name}",
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
+        
         await create_appointment(
             schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
         )

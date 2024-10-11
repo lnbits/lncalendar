@@ -22,7 +22,7 @@ class CalendarSettings(BaseModel):
 
     @property
     def public_key(self) -> str:
-        return P
+        return self.private_key.public_key.hex()
 
 
 
