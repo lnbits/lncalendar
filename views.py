@@ -3,6 +3,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
+
 from lnbits.core.models import User
 from lnbits.decorators import check_user_exists
 from lnbits.helpers import template_renderer
@@ -19,7 +20,7 @@ def lncalendar_renderer():
 @lncalendar_generic_router.get("/")
 async def index(request: Request, user: User = Depends(check_user_exists)):
     return lncalendar_renderer().TemplateResponse(
-        "lncalendar/index.html", {"request": request, "user": user.dict()}
+        "lncalendar/index.html", {"request": request, "user": user.json()}
     )
 
 
