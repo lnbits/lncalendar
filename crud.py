@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Union
 
 from lnbits.db import Database
-from lnbits.helpers import insert_query, update_query, urlsafe_short_hash
+from lnbits.helpers import urlsafe_short_hash
 
 from .models import (
     Appointment,
@@ -28,37 +28,30 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         end_time=data.end_time,
         amount=data.amount,
     )
-    await db.execute(
-        insert_query("lncalendar.schedule", schedule),
-        schedule.dict(),
-    )
+    await db.insert("lncalendar.schedule", schedule)
     return schedule
 
 
 async def update_schedule(schedule: Schedule) -> Schedule:
-    await db.execute(
-        update_query("lncalendar.schedule", schedule),
-        schedule.dict(),
-    )
+    await db.update("lncalendar.schedule", schedule)
     return schedule
 
 
 async def get_schedule(schedule_id: str) -> Optional[Schedule]:
-    row = await db.fetchone(
+    return await db.fetchone(
         "SELECT * FROM lncalendar.schedule WHERE id = :id",
         {"id": schedule_id},
+        Schedule,
     )
-    return Schedule(**row) if row else None
 
 
 async def get_schedules(wallet_ids: Union[str, list[str]]) -> list[Schedule]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
-
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
-    rows = await db.fetchall(f"SELECT * FROM lncalendar.schedule WHERE wallet IN ({q})")
-
-    return [Schedule(**row) for row in rows]
+    return await db.fetchall(
+        f"SELECT * FROM lncalendar.schedule WHERE wallet IN ({q})", model=Schedule
+    )
 
 
 async def delete_schedule(schedule_id: str) -> None:
@@ -81,27 +74,24 @@ async def create_appointment(
         schedule=schedule_id,
         paid=False,
     )
-    await db.execute(
-        insert_query("lncalendar.appointment", appointment),
-        appointment.dict(),
-    )
+    await db.insert("lncalendar.appointment", appointment)
     return appointment
 
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
-    row = await db.fetchone(
+    return await db.fetchone(
         "SELECT * FROM lncalendar.appointment WHERE id = :id",
         {"id": appointment_id},
+        Appointment,
     )
-    return Appointment(**row) if row else None
 
 
 async def get_appointments(schedule_id: str) -> list[Appointment]:
-    rows = await db.fetchall(
+    return await db.fetchall(
         "SELECT * FROM lncalendar.appointment WHERE schedule = :schedule",
         {"schedule": schedule_id},
+        Appointment,
     )
-    return [Appointment(**row) for row in rows]
 
 
 async def get_appointments_wallets(
@@ -117,10 +107,10 @@ async def get_appointments_wallets(
     schedule_ids = [schedule.id for schedule in schedules]
 
     q = ",".join([f"'{schedule_id}'" for schedule_id in schedule_ids])
-    rows = await db.fetchall(
-        f"SELECT * FROM lncalendar.appointment WHERE schedule IN ({q})"
+    return await db.fetchall(
+        f"SELECT * FROM lncalendar.appointment WHERE schedule IN ({q})",
+        model=Appointment,
     )
-    return [Appointment(**row) for row in rows]
 
 
 async def set_appointment_paid(appointment_id: str) -> None:
@@ -151,27 +141,24 @@ async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTim
         end_time=data.end_time or data.start_time,
         schedule=data.schedule,
     )
-    await db.execute(
-        insert_query("lncalendar.unavailable", unavailable_time),
-        unavailable_time.dict(),
-    )
+    await db.insert("lncalendar.unavailable", unavailable_time)
     return unavailable_time
 
 
 async def get_unavailable_time(unavailable_time_id: str) -> Optional[UnavailableTime]:
-    row = await db.fetchone(
+    return await db.fetchone(
         "SELECT * FROM lncalendar.unavailable WHERE id = :id",
         {"id": unavailable_time_id},
+        UnavailableTime,
     )
-    return UnavailableTime(**row) if row else None
 
 
 async def get_unavailable_times(schedule_id: str) -> list[UnavailableTime]:
-    rows = await db.fetchall(
+    return await db.fetchall(
         "SELECT * FROM lncalendar.unavailable WHERE schedule = :schedule",
         {"schedule": schedule_id},
+        UnavailableTime,
     )
-    return [UnavailableTime(**row) for row in rows]
 
 
 async def delete_unavailable_time(unavailable_time_id: str) -> None:

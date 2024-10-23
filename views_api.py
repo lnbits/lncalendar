@@ -110,21 +110,20 @@ async def api_appointment_create(data: CreateAppointment):
             status_code=HTTPStatus.NOT_FOUND, detail="Schedule does not exist."
         )
     try:
-        payment_hash, payment_request = await create_invoice(
+        payment = await create_invoice(
             wallet_id=schedule.wallet,
             amount=schedule.amount,  # type: ignore
             memo=f"{schedule.name}",
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
         await create_appointment(
-            schedule_id=data.schedule, payment_hash=payment_hash, data=data
+            schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
         )
-        print(payment_hash, payment_request)
     except Exception as exc:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)
         ) from exc
-    return {"payment_hash": payment_hash, "payment_request": payment_request}
+    return {"payment_hash": payment.payment_hash, "payment_request": payment.bolt11}
 
 
 @lncalendar_api_router.get("/api/v1/appointment/purge/{schedule_id}")
