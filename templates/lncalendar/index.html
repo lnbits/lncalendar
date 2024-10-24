@@ -7,6 +7,11 @@
         <q-btn unelevated color="primary" @click="formDialog.show = true"
           >New schedule</q-btn
         >
+        <lnbits-extension-settings-btn-dialog
+          v-if="this.g.user.admin"
+          :endpoint="endpoint"
+          :options="settings"
+        />
       </q-card-section>
     </q-card>
 
@@ -183,9 +188,15 @@
           dense
           v-model.trim="formDialog.data.name"
           type="text"
-          label="My availabitlity *"
+          label="Calendar name *"
         ></q-input>
-
+        <q-input
+          filled
+          dense
+          v-model.trim="formDialog.data.public_key"
+          type="text"
+          label="Nostr public key"
+        ></q-input>
         <div class="row">
           <q-select
             class="col-12 col-sm-6 q-pr-sm"

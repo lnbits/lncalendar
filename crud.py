@@ -6,18 +6,41 @@ from lnbits.helpers import urlsafe_short_hash
 
 from .models import (
     Appointment,
+    CalendarSettings,
     CreateAppointment,
     CreateSchedule,
     CreateUnavailableTime,
     Schedule,
     UnavailableTime,
 )
+from .nostr.key import PrivateKey
 
 db = Database("ext_lncalendar")
 
+async def get_or_create_calendar_settings() -> CalendarSettings:
+    settings = await db.fetchone(
+        "SELECT * FROM lncalendar.settings LIMIT 1",
+        model=CalendarSettings,  # type: ignore
+    )
+    if settings:
+        return settings
+    else:
+        settings = CalendarSettings(
+            nostr_private_key=PrivateKey().hex(),
+        )
+        await db.insert("lncalendar.settings", settings)  # type: ignore
+        return settings
+
+async def update_calendar_settings(settings: CalendarSettings) -> CalendarSettings:
+    await db.update("lncalendar.settings", settings, "")
+    return settings
+
+async def delete_calendar_settings() -> None:
+    await db.execute("DELETE FROM lncalendar.settings")
 
 async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
     schedule_id = urlsafe_short_hash()
+    
     schedule = Schedule(
         id=schedule_id,
         wallet=wallet_id,
@@ -27,6 +50,9 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         start_time=data.start_time,
         end_time=data.end_time,
         amount=data.amount,
+        timeslot=data.timeslot,
+        currency=data.currency,
+        public_key=data.public_key,
     )
     await db.insert("lncalendar.schedule", schedule)
     return schedule
@@ -68,15 +94,20 @@ async def create_appointment(
         id=appointment_id,
         name=data.name,
         email=data.email,
+        nostr_pubkey=data.nostr_pubkey,
         info=data.info,
         start_time=data.start_time,
         end_time=data.end_time,
         schedule=schedule_id,
         paid=False,
+        created_at=datetime.now(),
     )
     await db.insert("lncalendar.appointment", appointment)
     return appointment
 
+async def update_appointment(appointment: Appointment) -> Appointment:
+    await db.update("lncalendar.appointment", appointment, "")
+    return appointment
 
 async def get_appointment(appointment_id: str) -> Optional[Appointment]:
     return await db.fetchone(
@@ -95,7 +126,7 @@ async def get_appointments(schedule_id: str) -> list[Appointment]:
 
 
 async def get_appointments_wallets(
-    wallet_ids: Union[str, list[str]]
+    wallet_ids: Union[str, list[str]],
 ) -> list[Appointment]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
@@ -126,9 +157,15 @@ async def purge_appointments(schedule_id: str) -> None:
     await db.execute(
         f"""
         DELETE FROM lncalendar.appointment
-        WHERE schedule = :schedule AND paid = false AND time < {tsph}
+        WHERE schedule = :schedule AND paid = false AND created_at < {tsph}
         """,
         {"schedule": schedule_id, "diff": time_diff.timestamp()},
+    )
+
+
+async def delete_appointment(appointment_id: str) -> None:
+    await db.execute(
+        "DELETE FROM lncalendar.appointment WHERE id = :id", {"id": appointment_id}
     )
 
 
@@ -137,9 +174,11 @@ async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTim
     unavailable_time_id = urlsafe_short_hash()
     unavailable_time = UnavailableTime(
         id=unavailable_time_id,
+        name=data.name or "",
         start_time=data.start_time,
         end_time=data.end_time or data.start_time,
         schedule=data.schedule,
+        created_at=datetime.now(),
     )
     await db.insert("lncalendar.unavailable", unavailable_time)
     return unavailable_time
