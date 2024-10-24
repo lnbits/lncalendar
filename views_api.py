@@ -151,7 +151,7 @@ async def api_appointment_create(data: CreateAppointment):
     try:
         payment = await create_invoice(
             wallet_id=schedule.wallet,
-            amount=amount,
+            amount=schedule.amount,
             memo=f"{schedule.name}",
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
