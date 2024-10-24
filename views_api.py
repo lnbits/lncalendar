@@ -111,7 +111,8 @@ async def api_schedule_update(
 
 @lncalendar_api_router.delete("/api/v1/schedule/{schedule_id}")
 async def api_schedule_delete(
-    schedule_id: str, user: User = Depends(check_user_exists),
+    schedule_id: str,
+    user: User = Depends(check_user_exists),
 ):
     schedule = await get_schedule(schedule_id)
 
@@ -150,11 +151,11 @@ async def api_appointment_create(data: CreateAppointment):
     try:
         payment = await create_invoice(
             wallet_id=schedule.wallet,
-            amount=amount,  # type: ignore
+            amount=amount,
             memo=f"{schedule.name}",
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
-        
+
         await create_appointment(
             schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
         )
@@ -185,7 +186,7 @@ async def api_appointment_update(
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail="Not your schedule."
         )
-    
+
     for k, v in data.dict().items():
         if v is not None:
             setattr(appointment, k, v)
@@ -203,6 +204,7 @@ async def api_appointment_update(
         """
         await nostr_send_msg(pubkey, msg)
     return appointment.dict()
+
 
 @lncalendar_api_router.get("/api/v1/appointment/purge/{schedule_id}")
 async def api_purge_appointments(schedule_id: str):
@@ -328,15 +330,18 @@ async def api_unavailable_delete(
     await delete_unavailable_time(unavailable_id)
     return "", HTTPStatus.NO_CONTENT
 
+
 ## Currency API
 @lncalendar_api_router.get("/api/v1/currencies")
 async def api_get_currencies():
     return allowed_currencies()
 
+
 ## SETTINGS
 @lncalendar_api_router.get("/api/v1/settings", dependencies=[Depends(check_admin)])
 async def api_get_settings() -> CalendarSettings:
     return await get_or_create_calendar_settings()
+
 
 @lncalendar_api_router.put("/api/v1/settings", dependencies=[Depends(check_admin)])
 async def api_update_settings(settings: CalendarSettings) -> CalendarSettings:
@@ -347,6 +352,7 @@ async def api_update_settings(settings: CalendarSettings) -> CalendarSettings:
             detail="Invalid Nostr private key.", status_code=HTTPStatus.BAD_REQUEST
         ) from exc
     return await update_calendar_settings(settings)
+
 
 @lncalendar_api_router.delete("/api/v1/settings", dependencies=[Depends(check_admin)])
 async def api_delete_settings() -> None:
