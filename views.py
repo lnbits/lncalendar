@@ -19,7 +19,7 @@ def lncalendar_renderer():
 @lncalendar_generic_router.get("/")
 async def index(request: Request, user: User = Depends(check_user_exists)):
     return lncalendar_renderer().TemplateResponse(
-        "lncalendar/index.html", {"request": request, "user": user.dict()}
+        "lncalendar/index.html", {"request": request, "user": user.json()}
     )
 
 
@@ -34,7 +34,7 @@ async def display(request: Request, schedule_id: str):
         "lncalendar/display.html",
         {
             "request": request,
-            "schedule": schedule.dict(),
+            "schedule": schedule.json(),
             "available_days": schedule.availabe_days,
         },
     )
