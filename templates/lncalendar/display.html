@@ -119,7 +119,7 @@
 </div>
 {% endblock %} {% block scripts %}
 <script>
-  const schedule = {{ schedule | tojson }};
+  const schedule = JSON.parse({{ schedule | tojson }});
   const availableDays = {{ available_days | tojson }};
 </script>
 <script src="{{ static_url_for('lncalendar/static', path='js/utils.js') }}"></script>
