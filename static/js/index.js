@@ -3,7 +3,7 @@ window.app = Vue.createApp({
   mixins: [window.windowMixin],
   computed: {
     endpoint: function () {
-      return `/lncalendar/api/v1/settings?usr=${this.g.user.id}`
+      return `/lncalendar/api/v1/settings`
     }
   },
   data: function () {

@@ -10,6 +10,7 @@ def parse_nostr_private_key(key: str) -> PrivateKey:
     else:
         return PrivateKey(bytes.fromhex(key))
 
+
 def normalize_public_key(pubkey: str) -> str:
     if pubkey.startswith("npub1"):
         _, decoded_data = bech32_decode(pubkey)
