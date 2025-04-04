@@ -52,7 +52,7 @@ window.app.component('schedule-details', {
     timeFormatted(eventInfo) {
       if (!eventInfo) return null
       let [date, time] = eventInfo.start_time.split(' ')
-      let formattedDate = Quasar.utils.date.formatDate(
+      let formattedDate = Quasar.date.formatDate(
         new Date(date),
         'ddd, Do MMM, YYYY'
       )
@@ -73,7 +73,6 @@ window.app.component('schedule-details', {
         .sort((a, b) => {
           return moment(a.time, 'HH:mm') - moment(b.time, 'HH:mm')
         })
-      console.log(this.eventsByDate)
     },
     availableDaysFn(date) {
       if (new Date(date) < this.today) return false
@@ -156,6 +155,8 @@ window.app.component('schedule-details', {
   },
 
   created: async function () {
+    this.date = Quasar.date.formatDate(Date.now(), 'YYYY/MM/DD')
+    this.today = new Date(this.date)
     this.events = this.appointments.map(appointment => {
       return appointment.start_time.split(' ')[0]
     })

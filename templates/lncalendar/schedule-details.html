@@ -19,6 +19,7 @@
                 event-color="primary"
                 :options="availableDaysFn"
                 today-btn
+                @update:model-value="dateChanged"
               ></q-date>
             </div>
           </template>
