@@ -1,8 +1,25 @@
 window.app = Vue.createApp({
   el: '#vue',
   mixins: [window.windowMixin],
+  computed: {
+    endpoint: function () {
+      return `/lncalendar/api/v1/settings`
+    }
+  },
   data: function () {
     return {
+      settings: [
+        {
+          type: 'str',
+          description: 'Nostr private key used for notifications',
+          name: 'nostr_private_key'
+        },
+        {
+          type: 'chips',
+          description: 'Comma seperated list of relays',
+          name: 'relays'
+        },
+      ],
       schedules: [],
       schedulesTable: {
         columns: [
