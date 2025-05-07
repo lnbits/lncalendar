@@ -114,6 +114,7 @@ async def api_appointment_create(data: CreateAppointment):
             wallet_id=schedule.wallet,
             amount=schedule.amount,  # type: ignore
             memo=f"{schedule.name}",
+            currency=schedule.currency,
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
         await create_appointment(

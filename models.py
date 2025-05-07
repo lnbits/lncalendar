@@ -12,6 +12,7 @@ class CreateSchedule(BaseModel):
     start_time: str = Query(...)
     end_time: str = Query(...)
     amount: int = Query(..., ge=1)
+    currency: str = Query("sat", regex="^[a-zA-Z]{3}$")
 
 
 class CreateUnavailableTime(BaseModel):
@@ -38,6 +39,7 @@ class Schedule(BaseModel):
     start_time: str
     end_time: str
     amount: int
+    currency: str = "sat"
 
     @property
     def availabe_days(self):

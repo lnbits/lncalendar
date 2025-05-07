@@ -30,5 +30,4 @@ async def on_invoice_paid(payment: Payment) -> None:
     schedule = await get_schedule(appointment.schedule)
     assert schedule
 
-    if payment.amount == schedule.amount * 1000:
-        await set_appointment_paid(payment.payment_hash)
+    await set_appointment_paid(payment.payment_hash)

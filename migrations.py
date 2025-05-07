@@ -51,3 +51,15 @@ async def m001_initial(db):
         );
     """
     )
+
+
+async def m002_add_currency_column(db):
+    """
+    Adds currency to scheduler.
+    """
+    await db.execute(
+        """
+            ALTER TABLE lncalendar.schedule
+            ADD COLUMN currency Text NOT NULL DEFAULT 'sat';
+        """
+    )

@@ -11,12 +11,13 @@ window.app = Vue.createApp({
           {
             name: 'amount',
             align: 'right',
-            label: 'Amount (sat)',
+            label: 'Amount',
             field: 'amount',
             sortable: true,
             sort: function (a, b, rowA, rowB) {
               return rowA.amount - rowB.amount
-            }
+            },
+            format: (val, row) => `${val} ${row.currency}`
           },
           {
             name: 'starts',
@@ -100,7 +101,8 @@ window.app = Vue.createApp({
       scheduleDialog: {
         show: false,
         data: {}
-      }
+      },
+      currencyOptions: ['sat']
     }
   },
   methods: {
@@ -242,5 +244,11 @@ window.app = Vue.createApp({
         .format(0)
         .match(/\s/)
     }
+    LNbits.api
+      .request('GET', '/api/v1/currencies')
+      .then(response => {
+        this.currencyOptions = ['sat', ...response.data]
+      })
+      .catch(LNbits.utils.notifyApiError)
   }
 })
