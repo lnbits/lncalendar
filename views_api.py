@@ -138,11 +138,7 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
 
 @lncalendar_api_router.get("/api/v1/appointment/{schedule_id}")
 async def api_get_appointments_schedule(schedule_id: str):
-    appointments = await get_appointments(schedule_id)
-
-    if not appointments:
-        return []
-    return appointments
+    return await get_appointments(schedule_id)
 
 
 @lncalendar_api_router.get("/api/v1/appointment")
