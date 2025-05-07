@@ -27,6 +27,7 @@ async def create_schedule(wallet_id: str, data: CreateSchedule) -> Schedule:
         start_time=data.start_time,
         end_time=data.end_time,
         amount=data.amount,
+        currency=data.currency,
     )
     await db.insert("lncalendar.schedule", schedule)
     return schedule
