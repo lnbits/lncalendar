@@ -25,7 +25,12 @@ from .crud import (
     set_appointment_paid,
     update_schedule,
 )
-from .models import CreateAppointment, CreateSchedule, CreateUnavailableTime
+from .models import (
+    Appointment,
+    CreateAppointment,
+    CreateSchedule,
+    CreateUnavailableTime,
+)
 
 lncalendar_api_router = APIRouter()
 
@@ -42,7 +47,10 @@ async def api_schedules(
         wallet_ids = user.wallet_ids if user else []
 
     return [
-        {**schedule.dict(), "available_days": schedule.availabe_days}
+        {
+            **schedule.dict(),
+            "available_days": schedule.availabe_days,
+        }  # why not fix name?
         for schedule in await get_schedules(wallet_ids)
     ]
 
@@ -78,7 +86,10 @@ async def api_schedule_update(
             setattr(schedule, k, v)
 
     schedule = await update_schedule(schedule)
-    return {**schedule.dict(), "available_days": schedule.availabe_days}
+    return {
+        **schedule.dict(),
+        "available_days": schedule.availabe_days,
+    }  # why not fix name?
 
 
 @lncalendar_api_router.delete("/api/v1/schedule/{schedule_id}")
@@ -113,12 +124,15 @@ async def api_appointment_create(data: CreateAppointment):
         payment = await create_invoice(
             wallet_id=schedule.wallet,
             amount=schedule.amount,  # type: ignore
+            # currency=schedule.currency,
             memo=f"{schedule.name}",
             extra={"tag": "lncalendar", "name": data.name, "email": data.email},
         )
+        # optional user id, so the user can check its apointments
         await create_appointment(
             schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
         )
+        # is there a way to check my appoiment if I have the payment hash?
     except Exception as exc:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)
@@ -128,6 +142,7 @@ async def api_appointment_create(data: CreateAppointment):
 
 @lncalendar_api_router.get("/api/v1/appointment/purge/{schedule_id}")
 async def api_purge_appointments(schedule_id: str):
+    # add adminkey check
     schedule = await get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(
@@ -148,15 +163,29 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Payment does not exist"
         )
+    # only update id not updated already
+
     if payment.success:
         await set_appointment_paid(payment_hash)
+    # should return the appointment details also?
     return {"paid": payment.success}
 
 
-@lncalendar_api_router.get("/api/v1/appointment/{schedule_id}")
+# This kind of API Docs should be present for all endpoints
+@lncalendar_api_router.get(
+    "/api/v1/appointment/{schedule_id}",
+    name="Get Appointments",
+    summary="get paginated list of apoiments for a schedule",
+    response_description="list of appoiments",
+    response_model=list[Appointment],  # should be paginated
+    # openapi_extra=generate_filter_params_openapi(AppointmenttFilters),
+)
 async def api_get_appointments_schedule(schedule_id: str):
+    # why not use admin key?
+    # this returns closed ones too? No sorting or filtering?
     appointments = await get_appointments(schedule_id)
 
+    # redundant
     if not appointments:
         return []
     return appointments
@@ -164,7 +193,9 @@ async def api_get_appointments_schedule(schedule_id: str):
 
 @lncalendar_api_router.get("/api/v1/appointment")
 async def api_get_all_appointments(
-    wallet: WalletTypeInfo = Depends(require_invoice_key),
+    wallet: WalletTypeInfo = Depends(
+        require_invoice_key
+    ),  # check user exists is better
 ):
     user = await get_user(wallet.wallet.user)
     wallet_ids = user.wallet_ids if user else []
@@ -192,6 +223,7 @@ async def api_unavailable_create(
 
 @lncalendar_api_router.get("/api/v1/unavailable/{schedule_id}")
 async def api_unavailable_get(schedule_id: str):
+    # are these public for everyone for ever and ever?
     schedule = await get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(
