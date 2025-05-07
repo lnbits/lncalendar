@@ -27,7 +27,7 @@ class CreateAppointment(BaseModel):
     info: str = Query(None)
     start_time: str = Query(...)
     end_time: str = Query(...)
-    schedule: str = Query(...)
+    schedule: str = Query(...)  # schedule id
 
 
 class Schedule(BaseModel):
