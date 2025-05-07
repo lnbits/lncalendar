@@ -35,6 +35,6 @@ async def display(request: Request, schedule_id: str):
         {
             "request": request,
             "schedule": schedule.json(),
-            "available_days": schedule.availabe_days,
+            "available_days": schedule.available_days,
         },
     )

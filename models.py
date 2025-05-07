@@ -42,7 +42,7 @@ class Schedule(BaseModel):
     currency: str = "sat"
 
     @property
-    def availabe_days(self):
+    def available_days(self):
         return list(range(self.start_day, self.end_day + 1))
 
 
