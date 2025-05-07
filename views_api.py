@@ -99,19 +99,18 @@ async def api_appointment_create(data: CreateAppointment):
     schedule = await get_schedule(data.schedule)
     if not schedule:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
-    try:
-        payment = await create_invoice(
-            wallet_id=schedule.wallet,
-            amount=schedule.amount,  # type: ignore
-            memo=f"{schedule.name}",
-            currency=schedule.currency,
-            extra={"tag": "lncalendar", "name": data.name, "email": data.email},
-        )
-        await create_appointment(
-            schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
-        )
-    except Exception as exc:
-        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+    payment = await create_invoice(
+        wallet_id=schedule.wallet,
+        amount=schedule.amount,  # type: ignore
+        memo=f"{schedule.name}",
+        currency=schedule.currency,
+        extra={"tag": "lncalendar", "name": data.name, "email": data.email},
+    )
+    await create_appointment(
+        schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
+    )
+
     return {"payment_hash": payment.payment_hash, "payment_request": payment.bolt11}
 
 
