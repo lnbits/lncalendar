@@ -95,6 +95,22 @@ async def get_appointments(schedule_id: str) -> list[Appointment]:
     )
 
 
+async def get_appointments_for_time_slot(
+    schedule_id: str, start_time: str, paid: Optional[bool] = None
+) -> list[Appointment]:
+    where = "schedule = :schedule AND start_time = :start_time"
+    if paid is not None:
+        where += " AND paid = :paid"
+    return await db.fetchall(
+        f"""
+            SELECT * FROM lncalendar.appointment
+            WHERE {where}
+        """,
+        {"schedule": schedule_id, "start_time": start_time, "paid": paid},
+        Appointment,
+    )
+
+
 async def get_appointments_for_wallets(
     wallet_ids: Union[str, list[str]]
 ) -> list[Appointment]:

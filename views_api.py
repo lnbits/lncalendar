@@ -17,6 +17,7 @@ from .crud import (
     delete_schedule,
     delete_unavailable_time,
     get_appointments,
+    get_appointments_for_time_slot,
     get_appointments_for_wallets,
     get_schedule,
     get_schedules,
@@ -138,6 +139,16 @@ async def api_appointment_create(data: CreateAppointment) -> AppointmentPaymentR
     if not schedule:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
 
+    appoiments = await get_appointments_for_time_slot(
+        schedule_id=data.schedule,
+        start_time=data.start_time,
+        paid=True,
+    )
+    if len(appoiments) > 0:
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            "Appointment already exists for the time slot.",
+        )
     payment = await create_invoice(
         wallet_id=schedule.wallet,
         amount=schedule.amount,  # type: ignore
