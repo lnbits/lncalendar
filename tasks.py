@@ -5,7 +5,12 @@ from lnbits.helpers import get_current_extension_name
 from lnbits.tasks import register_invoice_listener
 from loguru import logger
 
-from .crud import get_appointment, get_schedule, set_appointment_paid
+from .crud import (
+    get_appointment,
+    get_schedule,
+    purge_appointments,
+    set_appointment_paid,
+)
 
 
 async def wait_for_paid_invoices():
@@ -31,3 +36,15 @@ async def on_invoice_paid(payment: Payment) -> None:
     assert schedule
 
     await set_appointment_paid(payment.payment_hash)
+
+
+async def run_by_the_minute_task():
+    minute_counter = 0
+    while True:
+        try:
+            await purge_appointments()
+        except Exception as ex:
+            logger.error(ex)
+
+        minute_counter += 1
+        await asyncio.sleep(60)

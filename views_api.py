@@ -21,7 +21,6 @@ from .crud import (
     get_schedule,
     get_schedules,
     get_unavailable_times,
-    purge_appointments,
     set_appointment_paid,
     update_schedule,
 )
@@ -112,14 +111,6 @@ async def api_appointment_create(data: CreateAppointment):
     )
 
     return {"payment_hash": payment.payment_hash, "payment_request": payment.bolt11}
-
-
-@lncalendar_api_router.get("/api/v1/appointment/purge/{schedule_id}")
-async def api_purge_appointments(schedule_id: str):
-    schedule = await get_schedule(schedule_id)
-    if not schedule:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
-    return await purge_appointments(schedule_id)
 
 
 @lncalendar_api_router.get("/api/v1/appointment/{schedule_id}/{payment_hash}")
