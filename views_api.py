@@ -17,7 +17,7 @@ from .crud import (
     delete_schedule,
     delete_unavailable_time,
     get_appointments,
-    get_appointments_wallets,
+    get_appointments_for_wallets,
     get_schedule,
     get_schedules,
     get_unavailable_times,
@@ -38,6 +38,7 @@ from .models import (
 lncalendar_api_router = APIRouter()
 
 
+###################################### Schedule API ####################################
 @lncalendar_api_router.get(
     "/api/v1/schedule",
     name="Get Schedules",
@@ -124,7 +125,7 @@ async def api_schedule_delete(
     return "", HTTPStatus.NO_CONTENT
 
 
-## Appointment API
+###################################### Appointment API #################################
 @lncalendar_api_router.post(
     "/api/v1/appointment",
     name="Create Appointment",
@@ -199,10 +200,10 @@ async def api_get_all_appointments(
 ):
     user = await get_user(wallet.wallet.user)
     wallet_ids = user.wallet_ids if user else []
-    return await get_appointments_wallets(wallet_ids)
+    return await get_appointments_for_wallets(wallet_ids)
 
 
-## Unavailable Time API
+###################################### Unavailable Time API ############################
 @lncalendar_api_router.post(
     "/api/v1/unavailable",
     name="Create Unavailable Time",

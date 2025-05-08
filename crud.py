@@ -95,7 +95,7 @@ async def get_appointments(schedule_id: str) -> list[Appointment]:
     )
 
 
-async def get_appointments_wallets(
+async def get_appointments_for_wallets(
     wallet_ids: Union[str, list[str]]
 ) -> list[Appointment]:
     if isinstance(wallet_ids, str):
