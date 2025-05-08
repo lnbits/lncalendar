@@ -24,16 +24,32 @@ from .crud import (
     set_appointment_paid,
     update_schedule,
 )
-from .models import CreateAppointment, CreateSchedule, CreateUnavailableTime
+from .models import (
+    Appointment,
+    AppointmentPaymentRequest,
+    AppointmentPaymentStatus,
+    CreateAppointment,
+    CreateSchedule,
+    CreateUnavailableTime,
+    Schedule,
+    UnavailableTime,
+)
 
 lncalendar_api_router = APIRouter()
 
 
-@lncalendar_api_router.get("/api/v1/schedule")
-async def api_schedules(
+@lncalendar_api_router.get(
+    "/api/v1/schedule",
+    name="Get Schedules",
+    summary="get paginated list of schedules for user",
+    response_description="list of schedules",
+    response_model=list[Schedule],
+    # openapi_extra=generate_filter_params_openapi(ScheduleFilters),
+)
+async def api_get_schedules(
     wallet: WalletTypeInfo = Depends(require_invoice_key),
     all_wallets: bool = Query(False),
-):
+):  # todo: -> list[Schedule]:
     wallet_ids = [wallet.wallet.id]
 
     if all_wallets:
@@ -46,20 +62,32 @@ async def api_schedules(
     ]
 
 
-@lncalendar_api_router.post("/api/v1/schedule")
+@lncalendar_api_router.post(
+    "/api/v1/schedule",
+    name="Create Schedule",
+    summary="create a new schedule",
+    response_description="list of schedules",
+    response_model=Schedule,
+)
 async def api_schedule_create(
     data: CreateSchedule, wallet: WalletTypeInfo = Depends(require_admin_key)
-):
+):  # todo -> Schedule:
     schedule = await create_schedule(wallet_id=wallet.wallet.id, data=data)
-    return schedule.dict()
+    return schedule
 
 
-@lncalendar_api_router.put("/api/v1/schedule/{schedule_id}")
+@lncalendar_api_router.put(
+    "/api/v1/schedule/{schedule_id}",
+    name="Update Schedule",
+    summary="update an existing schedule",
+    response_description="the updated schedule",
+    response_model=Schedule,
+)
 async def api_schedule_update(
     schedule_id: str,
     data: CreateSchedule,
     wallet: WalletTypeInfo = Depends(require_invoice_key),
-):
+):  # todo -> Schedule:
     schedule = await get_schedule(schedule_id)
 
     if not schedule:
@@ -76,7 +104,11 @@ async def api_schedule_update(
     return {**schedule.dict(), "available_days": schedule.available_days}
 
 
-@lncalendar_api_router.delete("/api/v1/schedule/{schedule_id}")
+@lncalendar_api_router.delete(
+    "/api/v1/schedule/{schedule_id}",
+    name="Delete Schedule",
+    summary="delete an existing schedule",
+)
 async def api_schedule_delete(
     schedule_id: str, wallet: WalletTypeInfo = Depends(require_admin_key)
 ):
@@ -93,8 +125,14 @@ async def api_schedule_delete(
 
 
 ## Appointment API
-@lncalendar_api_router.post("/api/v1/appointment")
-async def api_appointment_create(data: CreateAppointment):
+@lncalendar_api_router.post(
+    "/api/v1/appointment",
+    name="Create Appointment",
+    summary="create a new appointment",
+    response_description="the payment details for that appointment",
+    response_model=AppointmentPaymentRequest,
+)
+async def api_appointment_create(data: CreateAppointment) -> AppointmentPaymentRequest:
     schedule = await get_schedule(data.schedule)
     if not schedule:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
@@ -110,11 +148,21 @@ async def api_appointment_create(data: CreateAppointment):
         schedule_id=data.schedule, payment_hash=payment.payment_hash, data=data
     )
 
-    return {"payment_hash": payment.payment_hash, "payment_request": payment.bolt11}
+    return AppointmentPaymentRequest(
+        payment_hash=payment.payment_hash, payment_request=payment.bolt11
+    )
 
 
-@lncalendar_api_router.get("/api/v1/appointment/{schedule_id}/{payment_hash}")
-async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
+@lncalendar_api_router.get(
+    "/api/v1/appointment/{schedule_id}/{payment_hash}",
+    name="Check Appointment",
+    summary="check if an appointment is paid",
+    response_description="the payment status for that appointment",
+    response_model=AppointmentPaymentStatus,
+)
+async def api_appointment_check_invoice(
+    schedule_id: str, payment_hash: str
+) -> AppointmentPaymentStatus:
     schedule = await get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
@@ -123,15 +171,29 @@ async def api_appointment_check_invoice(schedule_id: str, payment_hash: str):
         raise HTTPException(HTTPStatus.NOT_FOUND, "Payment does not exist")
     if payment.success:
         await set_appointment_paid(payment_hash)
-    return {"paid": payment.success}
+    return AppointmentPaymentStatus(paid=payment.success)
 
 
-@lncalendar_api_router.get("/api/v1/appointment/{schedule_id}")
+@lncalendar_api_router.get(
+    "/api/v1/appointment/{schedule_id}",
+    name="Get Appointments for schedule",
+    summary="get paginated list of appointments for schedule",
+    response_description="list of appointments",
+    response_model=list[Appointment],
+    # openapi_extra=generate_filter_params_openapi(AppointmentFilters),
+)
 async def api_get_appointments_schedule(schedule_id: str):
     return await get_appointments(schedule_id)
 
 
-@lncalendar_api_router.get("/api/v1/appointment")
+@lncalendar_api_router.get(
+    "/api/v1/appointment",
+    name="Get User Appointments",
+    summary="get paginated list of appointments for a user",
+    response_description="list of appointments",
+    response_model=list[Appointment],
+    # openapi_extra=generate_filter_params_openapi(AppointmentFilters),
+)
 async def api_get_all_appointments(
     wallet: WalletTypeInfo = Depends(require_invoice_key),
 ):
@@ -141,7 +203,13 @@ async def api_get_all_appointments(
 
 
 ## Unavailable Time API
-@lncalendar_api_router.post("/api/v1/unavailable")
+@lncalendar_api_router.post(
+    "/api/v1/unavailable",
+    name="Create Unavailable Time",
+    summary="create a new unavailable time",
+    response_description="the unavailable time",
+    response_model=UnavailableTime,
+)
 async def api_unavailable_create(
     data: CreateUnavailableTime, wallet: WalletTypeInfo = Depends(require_admin_key)
 ):
@@ -155,15 +223,25 @@ async def api_unavailable_create(
     return unavailable
 
 
-@lncalendar_api_router.get("/api/v1/unavailable/{schedule_id}")
-async def api_unavailable_get(schedule_id: str):
+@lncalendar_api_router.get(
+    "/api/v1/unavailable/{schedule_id}",
+    name="Get Unavailable Times for schedule",
+    summary="get paginated list of unavailable times for schedule",
+    response_description="list of unavailable times",
+    response_model=list[UnavailableTime],
+)
+async def api_unavailable_get(schedule_id: str) -> list[UnavailableTime]:
     schedule = await get_schedule(schedule_id)
     if not schedule:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
     return await get_unavailable_times(schedule_id)
 
 
-@lncalendar_api_router.delete("/api/v1/unavailable/{schedule_id}/{unavailable_id}")
+@lncalendar_api_router.delete(
+    "/api/v1/unavailable/{schedule_id}/{unavailable_id}",
+    name="Delete Unavailable Time",
+    summary="delete an existing unavailable time",
+)
 async def api_unavailable_delete(
     schedule_id: str,
     unavailable_id: str,

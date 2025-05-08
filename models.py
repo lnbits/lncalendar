@@ -62,3 +62,12 @@ class Appointment(BaseModel):
     end_time: str
     schedule: str
     paid: bool
+
+
+class AppointmentPaymentRequest(BaseModel):
+    payment_hash: str
+    payment_request: str
+
+
+class AppointmentPaymentStatus(BaseModel):
+    paid: bool
