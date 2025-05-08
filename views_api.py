@@ -194,7 +194,7 @@ async def api_appointment_check_invoice(
     response_model=list[Appointment],
     # openapi_extra=generate_filter_params_openapi(AppointmentFilters),
 )
-async def api_get_appointments_schedule(schedule_id: str):
+async def api_get_appointments_for_schedule(schedule_id: str):
     return await get_appointments(schedule_id)
 
 
