@@ -40,10 +40,11 @@ class Schedule(BaseModel):
     end_time: str
     amount: int
     currency: str = "sat"
+    available_days: list[int] = []
 
-    @property
-    def available_days(self):
-        return list(range(self.start_day, self.end_day + 1))
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.available_days = list(range(self.start_day, self.end_day + 1))
 
 
 class UnavailableTime(BaseModel):

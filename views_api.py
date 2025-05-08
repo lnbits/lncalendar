@@ -32,6 +32,7 @@ from .models import (
     CreateAppointment,
     CreateSchedule,
     CreateUnavailableTime,
+    Schedule,
     UnavailableTime,
 )
 
@@ -44,23 +45,20 @@ lncalendar_api_router = APIRouter()
     name="Get Schedules",
     summary="get paginated list of schedules for user",
     response_description="list of schedules",
-    # response_model=list[Schedule],
+    response_model=list[Schedule],
     # openapi_extra=generate_filter_params_openapi(ScheduleFilters),
 )
 async def api_get_schedules(
     wallet: WalletTypeInfo = Depends(require_invoice_key),
     all_wallets: bool = Query(False),
-):  # todo: -> list[Schedule]:
+) -> list[Schedule]:
     wallet_ids = [wallet.wallet.id]
 
     if all_wallets:
         user = await get_user(wallet.wallet.user)
         wallet_ids = user.wallet_ids if user else []
 
-    return [
-        {**schedule.dict(), "available_days": schedule.available_days}
-        for schedule in await get_schedules(wallet_ids)
-    ]
+    return await get_schedules(wallet_ids)
 
 
 @lncalendar_api_router.post(
@@ -68,11 +66,11 @@ async def api_get_schedules(
     name="Create Schedule",
     summary="create a new schedule",
     response_description="list of schedules",
-    # response_model=Schedule,
+    response_model=Schedule,
 )
 async def api_schedule_create(
     data: CreateSchedule, wallet: WalletTypeInfo = Depends(require_admin_key)
-):  # todo -> Schedule:
+) -> Schedule:
     schedule = await create_schedule(wallet_id=wallet.wallet.id, data=data)
     return schedule
 
@@ -82,13 +80,13 @@ async def api_schedule_create(
     name="Update Schedule",
     summary="update an existing schedule",
     response_description="the updated schedule",
-    # response_model=Schedule,
+    response_model=Schedule,
 )
 async def api_schedule_update(
     schedule_id: str,
     data: CreateSchedule,
     wallet: WalletTypeInfo = Depends(require_invoice_key),
-):  # todo -> Schedule:
+) -> Schedule:
     schedule = await get_schedule(schedule_id)
 
     if not schedule:
@@ -102,7 +100,7 @@ async def api_schedule_update(
             setattr(schedule, k, v)
 
     schedule = await update_schedule(schedule)
-    return {**schedule.dict(), "available_days": schedule.available_days}
+    return schedule
 
 
 @lncalendar_api_router.delete(
