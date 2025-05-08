@@ -32,7 +32,6 @@ from .models import (
     CreateAppointment,
     CreateSchedule,
     CreateUnavailableTime,
-    Schedule,
     UnavailableTime,
 )
 
@@ -45,7 +44,7 @@ lncalendar_api_router = APIRouter()
     name="Get Schedules",
     summary="get paginated list of schedules for user",
     response_description="list of schedules",
-    response_model=list[Schedule],
+    # response_model=list[Schedule],
     # openapi_extra=generate_filter_params_openapi(ScheduleFilters),
 )
 async def api_get_schedules(
@@ -69,7 +68,7 @@ async def api_get_schedules(
     name="Create Schedule",
     summary="create a new schedule",
     response_description="list of schedules",
-    response_model=Schedule,
+    # response_model=Schedule,
 )
 async def api_schedule_create(
     data: CreateSchedule, wallet: WalletTypeInfo = Depends(require_admin_key)
@@ -83,7 +82,7 @@ async def api_schedule_create(
     name="Update Schedule",
     summary="update an existing schedule",
     response_description="the updated schedule",
-    response_model=Schedule,
+    # response_model=Schedule,
 )
 async def api_schedule_update(
     schedule_id: str,
