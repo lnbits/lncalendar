@@ -98,17 +98,7 @@ window.app = Vue.createApp({
           console.error(err)
         })
     },
-    async purgeAppointments() {
-      try {
-        await LNbits.api.request(
-          'GET',
-          `/lncalendar/api/v1/appointment/purge/${this.schedule.id}`
-        )
-      } catch (error) {
-        console.warn(error)
-        LNbits.utils.notifyApiError(error)
-      }
-    },
+
     async getAppointments() {
       try {
         let appointments = await LNbits.api.request(
@@ -196,7 +186,6 @@ window.app = Vue.createApp({
     this.availableDays = availableDays
     this.date = Quasar.date.formatDate(Date.now(), 'YYYY/MM/DD')
     this.today = new Date(this.date)
-    await this.purgeAppointments()
     await this.getAppointments()
     this.getUnavailableDates()
   }

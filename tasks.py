@@ -18,8 +18,12 @@ async def wait_for_paid_invoices():
     register_invoice_listener(invoice_queue, get_current_extension_name())
 
     while True:
-        payment = await invoice_queue.get()
-        await on_invoice_paid(payment)
+        try:
+            payment = await invoice_queue.get()
+            await on_invoice_paid(payment)
+        except Exception as ex:
+            logger.error(f"Error processing invoice: {ex}")
+            await asyncio.sleep(1)
 
 
 async def on_invoice_paid(payment: Payment) -> None:
@@ -29,7 +33,7 @@ async def on_invoice_paid(payment: Payment) -> None:
 
     appointment = await get_appointment(payment.checking_id)
     if not appointment:
-        logger.error("this should never happen", payment)
+        logger.warning("Apoiment not found for payment", payment)
         return
 
     schedule = await get_schedule(appointment.schedule)
