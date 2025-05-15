@@ -26,6 +26,7 @@ from .crud import (
     update_schedule,
 )
 from .models import (
+    TIMEZONES,
     Appointment,
     AppointmentPaymentRequest,
     AppointmentPaymentStatus,
@@ -150,7 +151,7 @@ async def api_appointment_create(data: CreateAppointment) -> AppointmentPaymentR
         wallet_id=schedule.wallet,
         amount=schedule.amount,  # type: ignore
         memo=f"{schedule.name}",
-        currency=schedule.currency,
+        currency=schedule.extra.currency,
         extra={"tag": "lncalendar", "name": data.name, "email": data.email},
     )
     await create_appointment(
@@ -263,3 +264,15 @@ async def api_unavailable_delete(
         raise HTTPException(HTTPStatus.FORBIDDEN, "Not your schedule.")
     await delete_unavailable_time(unavailable_id)
     return "", HTTPStatus.NO_CONTENT
+
+
+###################################### Misc ############################
+@lncalendar_api_router.get(
+    "/api/v1/timezones",
+    name="Get Timezones",
+    summary="get list of timezones",
+    response_description="list of timezones",
+    response_model=list[str],
+)
+async def api_timezones():
+    return TIMEZONES

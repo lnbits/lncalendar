@@ -2,11 +2,18 @@ from typing import Optional
 
 from fastapi import Query
 from pydantic import BaseModel
+from zoneinfo import available_timezones
+
+# A set of all available time zone names
+TIMEZONES = sorted(available_timezones())
+
+print("### Available timezones:", TIMEZONES)
 
 
 class CreateSchedule(BaseModel):
     wallet: str = Query(...)
     name: str = Query(...)
+    timezone: str = Query(..., examples=TIMEZONES)
     start_day: int = Query(..., ge=0, le=6)
     end_day: int = Query(..., ge=0, le=6)
     start_time: str = Query(...)
@@ -30,6 +37,11 @@ class CreateAppointment(BaseModel):
     schedule: str = Query(...)
 
 
+class ScheduleExtra(BaseModel):
+    currency: str = "sat"
+    timezone: str = "UTC"
+
+
 class Schedule(BaseModel):
     id: str
     wallet: str
@@ -39,8 +51,9 @@ class Schedule(BaseModel):
     start_time: str
     end_time: str
     amount: int
-    currency: str = "sat"
     available_days: list[int] = []
+
+    extra: ScheduleExtra = ScheduleExtra()
 
     def __init__(self, **data):
         super().__init__(**data)

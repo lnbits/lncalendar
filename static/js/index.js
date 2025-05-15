@@ -17,7 +17,7 @@ window.app = Vue.createApp({
             sort: function (a, b, rowA, rowB) {
               return rowA.amount - rowB.amount
             },
-            format: (val, row) => `${val} ${row.currency}`
+            format: (val, row) => `${val} ${row.extra.currency}`
           },
           {
             name: 'starts',
@@ -30,7 +30,7 @@ window.app = Vue.createApp({
               }`
           },
           {
-            name: 'ens',
+            name: 'ends',
             align: 'left',
             label: 'Ends',
             field: 'end_day',
@@ -96,13 +96,17 @@ window.app = Vue.createApp({
         show_start_time: false,
         show_end_time: false,
         timeFormat24: true,
-        data: {}
+        data: {
+          currency: 'sat',
+          timezone: 'UTC',
+        }
       },
       scheduleDialog: {
         show: false,
         data: {}
       },
-      currencyOptions: ['sat']
+      currencyOptions: ['sat'],
+      timeozoneOptions: ['UTC'],
     }
   },
   methods: {
@@ -118,7 +122,10 @@ window.app = Vue.createApp({
         })
     },
     resetForm() {
-      this.formDialog.data = {}
+      this.formDialog.data = {
+        currency: 'sat',
+        timezone: 'UTC',
+      }
     },
     sendFormData() {
       const data = {...this.formDialog.data}
@@ -248,6 +255,13 @@ window.app = Vue.createApp({
       .request('GET', '/api/v1/currencies')
       .then(response => {
         this.currencyOptions = ['sat', ...response.data]
+      })
+      .catch(LNbits.utils.notifyApiError)
+
+    LNbits.api
+      .request('GET', '/lncalendar/api/v1/timezones')
+      .then(response => {
+        this.timezoneOptions = response.data
       })
       .catch(LNbits.utils.notifyApiError)
   }
