@@ -65,9 +65,8 @@ async def delete_schedule(schedule_id: str) -> None:
 async def create_appointment(
     schedule_id: str, payment_hash: str, data: CreateAppointment
 ) -> Appointment:
-    appointment_id = payment_hash
     appointment = Appointment(
-        id=appointment_id,
+        id=payment_hash,
         name=data.name,
         email=data.email,
         info=data.info,

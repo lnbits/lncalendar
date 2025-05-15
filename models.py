@@ -62,10 +62,26 @@ class CreateAppointment(BaseModel):
     end_time: str = Query(...)
     schedule: str = Query(...)
 
+    def check(self, apoiment_duration_minutes: int):
+        t1 = datetime.strptime(self.start_time, "%Y/%m/%d %H:%M").time()
+        t2 = datetime.strptime(self.end_time, "%Y/%m/%d %H:%M").time()
+
+        if t1 >= t2:
+            raise ValueError("Start time must be less than end time.")
+
+        t1_total_seconds = t1.hour * 60 + t1.minute
+        t2_total_seconds = t2.hour * 60 + t2.minute
+
+        if t2_total_seconds - t1_total_seconds != apoiment_duration_minutes:
+            raise ValueError(
+                f"Appointment duration must be {apoiment_duration_minutes} minutes."
+            )
+
 
 class ScheduleExtra(BaseModel):
     currency: str = "sat"
     timezone: str = "UTC"
+    apoiment_duration_minutes: int = 30
 
 
 class Schedule(BaseModel):

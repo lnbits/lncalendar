@@ -135,9 +135,12 @@ async def api_schedule_delete(
     response_model=AppointmentPaymentRequest,
 )
 async def api_appointment_create(data: CreateAppointment) -> AppointmentPaymentRequest:
+
     schedule = await get_schedule(data.schedule)
     if not schedule:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Schedule does not exist.")
+
+    data.check(schedule.extra.apoiment_duration_minutes)
 
     appoiments = await get_appointments_for_time_slot(
         schedule_id=data.schedule,
