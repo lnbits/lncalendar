@@ -27,7 +27,7 @@ window.app = Vue.createApp({
             format: (val, row) =>
               `${_.findWhere(this.weekdays, {value: val}).label} @ ${
                 row.start_time
-              }`
+              } ${row.extra.timezone}`
           },
           {
             name: 'ends',
@@ -37,7 +37,7 @@ window.app = Vue.createApp({
             format: (val, row) =>
               `${_.findWhere(this.weekdays, {value: val}).label} @ ${
                 row.end_time
-              }`
+              } ${row.extra.timezone}`
           }
         ],
         pagination: {
@@ -98,7 +98,7 @@ window.app = Vue.createApp({
         timeFormat24: true,
         data: {
           currency: 'sat',
-          timezone: 'UTC',
+          timezone: 'UTC'
         }
       },
       scheduleDialog: {
@@ -106,7 +106,7 @@ window.app = Vue.createApp({
         data: {}
       },
       currencyOptions: ['sat'],
-      timeozoneOptions: ['UTC'],
+      timeozoneOptions: ['UTC']
     }
   },
   methods: {
@@ -124,7 +124,7 @@ window.app = Vue.createApp({
     resetForm() {
       this.formDialog.data = {
         currency: 'sat',
-        timezone: 'UTC',
+        timezone: 'UTC'
       }
     },
     sendFormData() {

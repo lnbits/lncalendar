@@ -72,6 +72,7 @@ async def api_get_schedules(
 async def api_schedule_create(
     data: CreateSchedule, wallet: WalletTypeInfo = Depends(require_admin_key)
 ) -> Schedule:
+    data.check()
     schedule = await create_schedule(wallet_id=wallet.wallet.id, data=data)
     return schedule
 
@@ -88,6 +89,7 @@ async def api_schedule_update(
     data: CreateSchedule,
     wallet: WalletTypeInfo = Depends(require_invoice_key),
 ) -> Schedule:
+    data.check()
     schedule = await get_schedule(schedule_id)
 
     if not schedule:

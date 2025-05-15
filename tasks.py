@@ -45,10 +45,10 @@ async def on_invoice_paid(payment: Payment) -> None:
 async def run_by_the_minute_task():
     minute_counter = 0
     while True:
+        await asyncio.sleep(60)
         try:
             await purge_appointments()
         except Exception as ex:
             logger.error(ex)
 
         minute_counter += 1
-        await asyncio.sleep(60)

@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import Query
-from pydantic import BaseModel
+from lnbits.utils.exchange_rates import allowed_currencies
+from pydantic import BaseModel, Field
 from zoneinfo import available_timezones
 
 # A set of all available time zone names
@@ -20,6 +22,30 @@ class CreateSchedule(BaseModel):
     end_time: str = Query(...)
     amount: int = Query(..., ge=1)
     currency: str = Query("sat", regex="^[a-zA-Z]{3}$")
+
+    def check(self):
+        if self.amount <= 0:
+            raise ValueError("Amount must be greater than 0.")
+        if not (0 <= self.start_day <= 6):
+            raise ValueError(f"Invalid start_day: {self.start_day}")
+        if not (0 <= self.end_day <= 6):
+            raise ValueError(f"Invalid end_day: {self.end_day}")
+        if not (self.start_day <= self.end_day):
+            raise ValueError("Start day must be less than or equal to end day.")
+
+        if self.timezone not in TIMEZONES:
+            raise ValueError(f"Invalid timezone: {self.timezone}")
+
+        t1 = datetime.strptime(self.start_time, "%H:%M").time()
+        t2 = datetime.strptime(self.end_time, "%H:%M").time()
+
+        if t1 >= t2:
+            raise ValueError("Start time must be less than end time.")
+
+        currencies = allowed_currencies()
+        currencies.append("SAT")
+        if self.currency.upper() not in currencies:
+            raise ValueError(f"Currency {self.currency} not allowed.")
 
 
 class CreateUnavailableTime(BaseModel):
@@ -51,7 +77,7 @@ class Schedule(BaseModel):
     start_time: str
     end_time: str
     amount: int
-    available_days: list[int] = []
+    available_days: list[int] = Field(default=[], no_database=True)
 
     extra: ScheduleExtra = ScheduleExtra()
 
