@@ -109,6 +109,13 @@ class UnavailableTime(BaseModel):
     schedule: str
 
 
+class AppointmentExtra(BaseModel):
+    timezone: str = "UTC"
+    # in case an appointment was paid after the time slot was already taken
+    # this is used to check if the appointment should be refunded
+    must_refund: bool = False
+
+
 class Appointment(BaseModel):
     id: str
     name: str
@@ -118,6 +125,7 @@ class Appointment(BaseModel):
     end_time: str
     schedule: str
     paid: bool
+    extra: AppointmentExtra = AppointmentExtra()
 
 
 class AppointmentPaymentRequest(BaseModel):

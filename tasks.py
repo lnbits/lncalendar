@@ -10,7 +10,10 @@ from .crud import (
     get_schedule,
     purge_appointments,
     set_appointment_paid,
+    update_appointment,
 )
+
+payment_lock = asyncio.Lock()
 
 
 async def wait_for_paid_invoices():
@@ -31,15 +34,8 @@ async def on_invoice_paid(payment: Payment) -> None:
         # not a lncalendar invoice
         return
 
-    appointment = await get_appointment(payment.checking_id)
-    if not appointment:
-        logger.warning("Apoiment not found for payment", payment)
-        return
-
-    schedule = await get_schedule(appointment.schedule)
-    assert schedule
-
-    await set_appointment_paid(payment.payment_hash)
+    async with payment_lock:
+        await _confirm_appointment(payment.checking_id)
 
 
 async def run_by_the_minute_task():
@@ -52,3 +48,21 @@ async def run_by_the_minute_task():
             logger.error(ex)
 
         minute_counter += 1
+
+
+async def _confirm_appointment(appointment_id: str) -> None:
+    appointment = await get_appointment(appointment_id)
+    if not appointment:
+        logger.warning(f"Appoiment not found: '{appointment_id}'.")
+        return
+
+    if appointment.paid:
+        logger.warning(f"Appoiment already paid: '{appointment_id}'.")
+        appointment.extra.must_refund = True
+        await update_appointment(appointment)
+        return
+
+    schedule = await get_schedule(appointment.schedule)
+    assert schedule
+
+    await set_appointment_paid(appointment_id)

@@ -137,6 +137,11 @@ async def set_appointment_paid(appointment_id: str) -> None:
     )
 
 
+async def update_appointment(appointment: Appointment) -> Appointment:
+    await db.update("lncalendar.appointment", appointment)
+    return appointment
+
+
 async def purge_appointments() -> None:
     time_diff = datetime.now() - timedelta(hours=24)
     tsph = db.timestamp_placeholder("diff")
