@@ -87,12 +87,24 @@ async def get_appointment(appointment_id: str) -> Optional[Appointment]:
     )
 
 
-async def get_appointments(schedule_id: str) -> list[Appointment]:
+async def get_appointments(
+    schedule_id: str, paid: Optional[bool] = None
+) -> list[Appointment]:
+    where = "schedule = :schedule and paid = true"
+    if paid is not None:
+        where += " AND paid = :paid"
     return await db.fetchall(
-        "SELECT * FROM lncalendar.appointment WHERE schedule = :schedule",
-        {"schedule": schedule_id},
+        f"""
+            SELECT * FROM lncalendar.appointment
+            WHERE {where}
+            ORDER BY start_time
+        """,
+        {"schedule": schedule_id, "paid": paid},
         Appointment,
     )
+
+
+# async def get_appointments_paginated(schedule_id: str)
 
 
 async def get_appointments_for_time_slot(

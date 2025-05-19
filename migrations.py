@@ -53,8 +53,15 @@ async def m001_initial(db):
     )
 
 
-async def m002_add_extra_column(db):
+async def m002_add_extra_column_to_scheduler(db):
     """
     Adds extra to scheduler.
     """
     await db.execute("ALTER TABLE lncalendar.schedule ADD COLUMN extra TEXT")
+
+
+async def m003_add_extra_column_to_appointment(db):
+    """
+    Adds extra to appointment.
+    """
+    await db.execute("ALTER TABLE lncalendar.appointment ADD COLUMN extra TEXT")

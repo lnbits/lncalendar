@@ -198,7 +198,7 @@ async def api_appointment_check_invoice(
     # openapi_extra=generate_filter_params_openapi(AppointmentFilters),
 )
 async def api_get_appointments_for_schedule(schedule_id: str):
-    return await get_appointments(schedule_id)
+    return await get_appointments(schedule_id, paid=True)
 
 
 @lncalendar_api_router.get(
