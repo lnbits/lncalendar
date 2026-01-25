@@ -1,7 +1,10 @@
-A paid scheduling extension for LNBits that lets you schedule blocks of time on your calendar and get paid in Bitcoin.
+A paid scheduling tool that lets others book time on your calendar with Bitcoin.
 
-It's like Calendly for Bitcoin, but better!
+Its functions include:
 
-Based on an idea by Mike Jarmuz.
+- Setting available time slots for bookings
+- Charging Lightning payments for appointments
+- Sharing booking pages with clients
+- Managing scheduled appointments
 
-(Direct Calendly intergration coming soon)
+An excellent choice for consultants, coaches, and professionals who want to monetize their time with Bitcoin-based appointment booking.
