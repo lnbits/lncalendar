@@ -16,6 +16,10 @@
   ],
   "images": [
     {
+      "uri": "https://raw.githubusercontent.com/lnbits/lncalendar/main/static/image/LNCal_Thumbnail.png",
+      "link": "https://www.youtube.com/watch?v=e8VXjp83sdc"
+    },
+    {
       "uri": "https://raw.githubusercontent.com/lnbits/lncalendar/main/static/image/1.png"
     },
     {
