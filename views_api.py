@@ -42,7 +42,7 @@ async def api_schedules(
         wallet_ids = user.wallet_ids if user else []
 
     return [
-        {**schedule.dict(), "available_days": schedule.available_days}
+        {**schedule.model_dump(), "available_days": schedule.available_days}
         for schedule in await get_schedules(wallet_ids)
     ]
 
@@ -52,7 +52,7 @@ async def api_schedule_create(
     data: CreateSchedule, wallet: WalletTypeInfo = Depends(require_admin_key)
 ):
     schedule = await create_schedule(wallet_id=wallet.wallet.id, data=data)
-    return schedule.dict()
+    return schedule.model_dump()
 
 
 @lncalendar_api_router.put("/api/v1/schedule/{schedule_id}")
@@ -69,12 +69,12 @@ async def api_schedule_update(
     if schedule.wallet != wallet.wallet.id:
         raise HTTPException(HTTPStatus.FORBIDDEN, "Not your schedule.")
 
-    for k, v in data.dict().items():
+    for k, v in data.model_dump().items():
         if v is not None:
             setattr(schedule, k, v)
 
     schedule = await update_schedule(schedule)
-    return {**schedule.dict(), "available_days": schedule.available_days}
+    return {**schedule.model_dump(), "available_days": schedule.available_days}
 
 
 @lncalendar_api_router.delete("/api/v1/schedule/{schedule_id}")

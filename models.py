@@ -12,7 +12,7 @@ class CreateSchedule(BaseModel):
     start_time: str = Query(...)
     end_time: str = Query(...)
     amount: int = Query(..., ge=1)
-    currency: str = Query("sat", regex="^[a-zA-Z]{3}$")
+    currency: str = Query("sat", pattern="^[a-zA-Z]{3}$")
 
 
 class CreateUnavailableTime(BaseModel):
@@ -23,8 +23,8 @@ class CreateUnavailableTime(BaseModel):
 
 class CreateAppointment(BaseModel):
     name: str = Query(...)
-    email: str = Query(None)
-    info: str = Query(None)
+    email: str | None = Query(None)
+    info: str | None = Query(None)
     start_time: str = Query(...)
     end_time: str = Query(...)
     schedule: str = Query(...)
@@ -56,8 +56,8 @@ class UnavailableTime(BaseModel):
 class Appointment(BaseModel):
     id: str
     name: str
-    email: Optional[str]
-    info: Optional[str]
+    email: Optional[str] = None
+    info: Optional[str] = None
     start_time: str
     end_time: str
     schedule: str
