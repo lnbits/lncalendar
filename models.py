@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import Query
 from pydantic import BaseModel
 
@@ -17,7 +15,7 @@ class CreateSchedule(BaseModel):
 
 class CreateUnavailableTime(BaseModel):
     start_time: str = Query(...)
-    end_time: Optional[str] = Query(None)
+    end_time: str | None = Query(None)
     schedule: str = Query(...)
 
 
@@ -56,8 +54,8 @@ class UnavailableTime(BaseModel):
 class Appointment(BaseModel):
     id: str
     name: str
-    email: Optional[str] = None
-    info: Optional[str] = None
+    email: str | None = None
+    info: str | None = None
     start_time: str
     end_time: str
     schedule: str

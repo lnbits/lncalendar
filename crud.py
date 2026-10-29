@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Optional, Union
 
 from lnbits.db import Database
 from lnbits.helpers import urlsafe_short_hash
@@ -38,7 +37,7 @@ async def update_schedule(schedule: Schedule) -> Schedule:
     return schedule
 
 
-async def get_schedule(schedule_id: str) -> Optional[Schedule]:
+async def get_schedule(schedule_id: str) -> Schedule | None:
     return await db.fetchone(
         "SELECT * FROM lncalendar.schedule WHERE id = :id",
         {"id": schedule_id},
@@ -46,7 +45,7 @@ async def get_schedule(schedule_id: str) -> Optional[Schedule]:
     )
 
 
-async def get_schedules(wallet_ids: Union[str, list[str]]) -> list[Schedule]:
+async def get_schedules(wallet_ids: str | list[str]) -> list[Schedule]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
@@ -79,7 +78,7 @@ async def create_appointment(
     return appointment
 
 
-async def get_appointment(appointment_id: str) -> Optional[Appointment]:
+async def get_appointment(appointment_id: str) -> Appointment | None:
     return await db.fetchone(
         "SELECT * FROM lncalendar.appointment WHERE id = :id",
         {"id": appointment_id},
@@ -95,9 +94,7 @@ async def get_appointments(schedule_id: str) -> list[Appointment]:
     )
 
 
-async def get_appointments_wallets(
-    wallet_ids: Union[str, list[str]]
-) -> list[Appointment]:
+async def get_appointments_wallets(wallet_ids: str | list[str]) -> list[Appointment]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
 
@@ -146,7 +143,7 @@ async def create_unavailable_time(data: CreateUnavailableTime) -> UnavailableTim
     return unavailable_time
 
 
-async def get_unavailable_time(unavailable_time_id: str) -> Optional[UnavailableTime]:
+async def get_unavailable_time(unavailable_time_id: str) -> UnavailableTime | None:
     return await db.fetchone(
         "SELECT * FROM lncalendar.unavailable WHERE id = :id",
         {"id": unavailable_time_id},
